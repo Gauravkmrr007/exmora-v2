@@ -9,3 +9,5 @@ __pycache__/
 dist/
 build/
 *.log
+firebase-secrets.js
+**/firebase-secrets.js
