@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: exmora-auth-backend
+    env: node
+    plan: free
+    region: ohio
+    buildCommand: npm install
+    startCommand: npm start
+    rootDir: exmora-auth/server
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_VERSION
+        value: 20
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGO_URI
+        sync: false
+      - key: DAILY_PROMPT_LIMIT
+        value: 5
