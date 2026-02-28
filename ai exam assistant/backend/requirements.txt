@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+requests
+pdfplumber
+PyJWT
+python-jose[cryptography]
+motor
+pymongo
+boto3
+
+# cd backend
+# .\venv\Scripts\Activate.ps1
+# python -m uvicorn main:app

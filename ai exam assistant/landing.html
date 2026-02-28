@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Exmora - Agentic Research OS</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <link rel="stylesheet" href="./frontend/styles/landing.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="./frontend/scripts/auth.js"></script>
+</head>
+
+<body>
+    <div class="bg-noise"></div>
+    <div class="glow-orb top"></div>
+    <div class="glow-orb right"></div>
+    
+    <div class="layout-wrapper">
+        <nav class="navbar" id="navbar">
+            <div class="nav-left">
+                <div class="logo-icon">
+                    <i data-lucide="sparkles" color="white" size="16"></i>
+                </div>
+                <span class="logo-text">Exmora</span>
+            </div>
+            <div class="nav-right">
+                <div class="nav-links">
+                    <a href="#product" class="nav-link">Product</a>
+                    <a href="#features" class="nav-link">Features</a>
+                    <a href="#docs" class="nav-link">Docs</a>
+                    <a href="#github" class="nav-link">GitHub</a>
+                </div>
+                <div class="nav-actions">
+                    <a href="login.html" class="btn btn-ghost">Log in</a>
+                    <a href="signup.html" class="btn btn-primary">Start Researching <i data-lucide="arrow-right" size="16"></i></a>
+                </div>
+            </div>
+        </nav>
+
+        <section class="hero" id="product">
+            <div class="hero-left">
+                <div class="micro-badge">
+                    <i data-lucide="zap" size="14"></i> Agentic Research OS
+                </div>
+                <h1 class="hero-title">Your AI Research<br>Workspace</h1>
+                <p class="hero-desc">
+                    Upload complex PDFs, instantly extract key insights, generate interactive quizzes, and chat with your documents using an advanced contextual AI.
+                </p>
+                <div class="hero-cta">
+                    <a href="signup.html" class="btn btn-primary btn-large">Start Researching <i data-lucide="arrow-right" size="16"></i></a>
+                    <a href="#demo" class="btn btn-secondary btn-large">See Demo</a>
+                </div>
+                <p class="trust-text">Built for researchers, engineers & knowledge workers.</p>
+            </div>
+            <div class="hero-right">
+                <div class="floating-card card-pdf">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+                        <span style="font-size:0.8rem; color:var(--text-muted);"><i data-lucide="file-text" size="14" style="vertical-align:middle;margin-right:6px"></i> attention_is_all_you_need.pdf</span>
+                    </div>
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line short"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line short"></div>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-title" style="margin-top:24px;width:40%;"></div>
+                    <div class="skeleton-line short"></div>
+                    <div class="skeleton-line"></div>
+                </div>
+                
+                <div class="floating-card card-chat">
+                    <div class="chat-bubble">Can you explain the self-attention mechanism?</div>
+                    <div class="chat-bubble ai">
+                        <span style="display:flex; align-items:center; gap:8px; margin-bottom:8px; color:#c084fc; font-weight:600; font-size:0.8rem;">
+                            <i data-lucide="bot" size="14"></i> Exmora Agent
+                        </span>
+                        Self-attention allows the model to weigh the importance of different words in a sequence when encoding a specific word. It computes a weighted sum of values...
+                    </div>
+                </div>
+                
+                <div class="floating-card card-quiz">
+                    <span style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:12px;">Active Recall Quiz</span>
+                    <div class="quiz-option"><i data-lucide="circle" size="14"></i> RNN architectures</div>
+                    <div class="quiz-option active"><i data-lucide="check-circle-2" size="14" color="#a855f7"></i> Multi-head attention</div>
+                    <div class="quiz-option"><i data-lucide="circle" size="14"></i> Convolutional layers</div>
+                </div>
+                
+                <div class="floating-card card-snippet">
+                    <div style="font-size:0.8rem; font-family:monospace; color:#a855f7; margin-bottom:8px;">Extracted Insight</div>
+                    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.4;">"The Transformer is the first transduction model relying entirely on self-attention..."</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="features-container" id="features">
+            <div class="features-grid">
+                <div class="feature-glass-card">
+                    <div class="feat-icon-wrapper">
+                        <i data-lucide="scan-text" size="24"></i>
+                    </div>
+                    <h3>Document Intelligence</h3>
+                    <p>AI automatically understands the structure, semantics, and meaning of your uploaded documents instantly.</p>
+                </div>
+                <div class="feature-glass-card">
+                    <div class="feat-icon-wrapper">
+                        <i data-lucide="message-square-dashed" size="24"></i>
+                    </div>
+                    <h3>Conversational Research</h3>
+                    <p>Engage in contextual, multi-turn chat with your resources holding long memory and precise citations.</p>
+                </div>
+                <div class="feature-glass-card">
+                    <div class="feat-icon-wrapper">
+                        <i data-lucide="brain-circuit" size="24"></i>
+                    </div>
+                    <h3>Active Learning Engine</h3>
+                    <p>Generate adaptive quizzes and interactive study modules to reinforce knowledge retention automatically.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="how-it-works">
+            <div class="section-header">
+                <h2 class="section-title">Workflow built for speed</h2>
+            </div>
+            <div class="timeline">
+                <div class="timeline-step">
+                    <div class="step-indicator">1</div>
+                    <div class="step-content">
+                        <h4>Upload Knowledge</h4>
+                        <p>Securely upload your PDFs, papers, or technical documentation into a private workspace.</p>
+                    </div>
+                </div>
+                <div class="timeline-step">
+                    <div class="step-indicator">2</div>
+                    <div class="step-content">
+                        <h4>AI Semantic Processing</h4>
+                        <p>The system builds a comprehensive semantic understanding, extracting key themes, formulas, and arguments.</p>
+                    </div>
+                </div>
+                <div class="timeline-step">
+                    <div class="step-indicator">3</div>
+                    <div class="step-content">
+                        <h4>Interact & Master</h4>
+                        <p>Draft summaries, ask deep analytical questions, and test your comprehension through generated quizzes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="nav-left">
+                        <div class="logo-icon"><i data-lucide="sparkles" color="white" size="16"></i></div>
+                        <span class="logo-text">Exmora</span>
+                    </div>
+                    <p class="footer-brand-text">Advanced AI platform for researchers, redefining the way we interact with knowledge.</p>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="link-group">
+                        <h5>Product</h5>
+                        <a href="#">Features</a>
+                        <a href="#">Pricing</a>
+                        <a href="#">Changelog</a>
+                    </div>
+                    <div class="link-group">
+                        <h5>Resources</h5>
+                        <a href="#">Documentation</a>
+                        <a href="#">API Reference</a>
+                        <a href="#">Blog</a>
+                    </div>
+                    <div class="link-group">
+                        <h5>Legal</h5>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div>&copy; 2026 Exmora. Built by Gaurav Kumar.</div>
+                <div class="socials">
+                    <a href="https://github.com/Gauravkmrr007"><i data-lucide="github" size="18"></i></a>
+                    <a href="https://linkedin.com/in/gaurav-kmrr"><i data-lucide="linkedin" size="18"></i></a>
+                    <a href="https://instagram.com/gaurav_kmrr"><i data-lucide="instagram" size="18"></i></a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        lucide.createIcons();
+        
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 20) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+    </script>
+    <script src="./frontend/scripts/landing.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Exmora Workspace</title>
+
+    <!-- Typography & Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="./frontend/styles/landing.css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      body {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+      
+      .auth-wrapper {
+        position: relative;
+        z-index: 10;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        flex: 1;
+      }
+
+      .auth-card {
+        background: rgba(15, 23, 42, 0.25);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius-lg);
+        padding: 32px 32px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        position: relative;
+        animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .auth-header {
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .auth-logo {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: var(--accent-gradient);
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
+      }
+
+      .auth-title {
+        font-size: 2rem;
+        font-weight: 700;
+        letter-spacing: -1px;
+        background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
+      }
+
+      .auth-subtitle {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+      }
+
+      .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .form-label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+      }
+
+      .form-input {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s ease;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #a855f7;
+        background: rgba(0, 0, 0, 0.4);
+        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-input::placeholder {
+        color: var(--text-muted);
+      }
+      
+      .password-hint {
+          font-size: 0.75rem;
+          color: var(--text-muted);
+          margin-top: -6px;
+      }
+
+      .submit-btn {
+        background: var(--accent-gradient);
+        color: white;
+        padding: 14px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: inherit;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        border: none;
+        cursor: pointer;
+        margin-top: 8px;
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .submit-btn::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(168, 85, 247, 0.5);
+      }
+
+      .submit-btn:hover::before {
+        opacity: 1;
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      .success-message {
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+        color: #86efac;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 4px;
+      }
+
+      .auth-footer {
+        text-align: center;
+        margin-top: 16px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+
+      .auth-link {
+        color: #c084fc;
+        font-weight: 500;
+        text-decoration: none;
+        transition: color 0.2s;
+        margin-left: 4px;
+      }
+
+      .auth-link:hover {
+        color: #e879f9;
+      }
+
+      .back-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        text-decoration: none;
+        margin-top: 24px;
+        transition: color 0.2s;
+      }
+
+      .back-home:hover {
+        color: var(--text-primary);
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* Success Modal Styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-content {
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 480px;
+        width: 90%;
+        text-align: center;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes scaleUp {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+
+      .modal-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        color: #22c55e;
+      }
+
+      .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 16px;
+      }
+
+      .modal-text {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        line-height: 1.6;
+        margin-bottom: 32px;
+      }
+
+      .modal-btn {
+        background: var(--accent-gradient);
+        color: white;
+        padding: 12px 32px;
+        border-radius: 12px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(168, 85, 247, 0.2);
+      }
+
+      .modal-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 25px rgba(168, 85, 247, 0.3);
+      }
+
+      @media (max-width: 480px) {
+        .auth-card { padding: 32px 24px; }
+        .auth-title { font-size: 1.75rem; }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Background Effects from landing.css -->
+    <div class="bg-noise"></div>
+    <div class="glow-orb top" style="top: -20%; left: -10%; width: 80vw;"></div>
+    <div class="glow-orb right" style="bottom: -20%; top: auto; right: -20%;"></div>
+    <div class="glow-orb center" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(99, 102, 241, 0.05) 40%, transparent 60%); z-index: 0;"></div>
+
+    <div class="auth-wrapper">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo">
+            <i data-lucide="sparkles" color="white" size="24"></i>
+          </div>
+          <h1 class="auth-title">Create Account</h1>
+          <p class="auth-subtitle">Start your research journey</p>
+        </div>
+
+        <form class="auth-form" id="signup-form">
+          <div class="form-group">
+            <label class="form-label" for="email">Email address</label>
+            <input 
+              type="email" 
+              id="email" 
+              class="form-input" 
+              placeholder="name@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="Create a strong password"
+              required
+              autocomplete="new-password"
+              minlength="6"
+            />
+            <span class="password-hint">At least 6 characters</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirm-password">Confirm Password</label>
+            <input 
+              type="password" 
+              id="confirm-password" 
+              class="form-input" 
+              placeholder="Re-enter your password"
+              required
+              autocomplete="new-password"
+              minlength="6"
+            />
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn">
+            Create Account
+          </button>
+
+          <div id="message-container"></div>
+        </form>
+
+      </div>
+
+      <div class="auth-footer">
+        Already have an account? 
+        <a href="login.html" class="auth-link">Login</a>
+        
+        <div style="margin-top: 8px;">
+          <a href="landing.html" class="back-home" style="margin-top: 0;">
+            <i data-lucide="arrow-left" size="14"></i> Back to home
+          </a>
+        </div>
+      </div>
+    <div class="modal-overlay" id="success-modal">
+      <div class="modal-content">
+        <div class="modal-icon">
+          <i data-lucide="mail-check" size="32"></i>
+        </div>
+        <h2 class="modal-title">Verification Sent!</h2>
+        <p class="modal-text">
+          A verification link has been sent to <strong id="sent-email">user@example.com</strong>. 
+          Please check your inbox (and spam folder) to verify your account.
+        </p>
+        <button class="modal-btn" onclick="window.location.href='login.html'">
+          Go to Login
+        </button>
+      </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="./frontend/scripts/firebase-config.js"></script>
+
+    <script>
+      // Initialize Firebase
+      firebase.initializeApp(window.firebaseConfig);
+      const auth = firebase.auth();
+
+      lucide.createIcons();
+
+      const form = document.getElementById('signup-form');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const confirmPasswordInput = document.getElementById('confirm-password');
+      const submitBtn = document.getElementById('submit-btn');
+      const messageContainer = document.getElementById('message-container');
+
+      form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const email = emailInput.value.trim();
+          const password = passwordInput.value;
+          const confirmPassword = confirmPasswordInput.value;
+
+          // Clear previous messages
+          messageContainer.innerHTML = '';
+
+          // 1. Frontend Email Validation
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+              messageContainer.innerHTML = '<div class="error-message">Please use a valid email address.</div>';
+              return;
+          }
+
+          // 2. Validate password match
+          if (password !== confirmPassword) {
+              messageContainer.innerHTML = '<div class="error-message">Passwords do not match</div>';
+              return;
+          }
+
+          // Validate password length
+          if (password.length < 6) {
+              messageContainer.innerHTML = '<div class="error-message">Password must be at least 6 characters</div>';
+              return;
+          }
+
+          // Disable form
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="loading-spinner"></span> <span>Creating account...</span>';
+          try {
+              // 3. Create user with Firebase Auth
+              const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+              const user = userCredential.user;
+
+              // 4. Send email verification
+              await user.sendEmailVerification();
+              console.log("Verification email sent.");
+
+              // 5. Sync with local backend (MongoDB)
+              const response = await fetch('http://localhost:5001/api/auth/register', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ email, password, firebaseUid: user.uid })
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                  // If local registration fails, we might want to handle it (e.g., Delete firebase user?)
+                  // For now, we'll just log it.
+                  console.error('Local DB sync failed:', data.message);
+              }
+
+              // Show success modal
+              document.getElementById('sent-email').textContent = email;
+              document.getElementById('success-modal').style.display = 'flex';
+              
+              // Logout from Firebase immediately
+              await auth.signOut();
+
+          } catch (error) {
+              messageContainer.innerHTML = `<div class="error-message">${error.message}</div>`;
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = 'Create Account';
+          }
+      });
+
+      // Check if already logged in
+      if (localStorage.getItem('token')) {
+          window.location.href = 'chat.html';
+      }
+    </script>
+  </body>
+</html>
