@@ -1,0 +1,9 @@
+[build]
+  base = "ai exam assistant"
+  command = "chmod +x ../netlify-build.sh && ../netlify-build.sh"
+  publish = "."
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
