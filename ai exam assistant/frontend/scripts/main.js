@@ -372,7 +372,7 @@ async function handleAsk() {
 
   try {
     // 1. Enforce backend rate limit by checking with Node API
-    const authServerBase = "http://127.0.0.1:5001"; // Connect to express backend
+    const authServerBase = "https://exmora-auth.onrender.com"; // Connect to express backend
     const quotaRes = await fetch(`${authServerBase}/api/prompt/ask`, {
       method: "POST",
       headers: { 
