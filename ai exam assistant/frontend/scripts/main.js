@@ -31,7 +31,7 @@ const logoutBtn = document.getElementById("logout-btn");
 
 // --- State ---
 let currentSessionId = null;
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://exmora-ai.onrender.com"; // Your Python AI Backend URL
 let currentController = null;
 let typingTimeout = null;
 let recognition = null;

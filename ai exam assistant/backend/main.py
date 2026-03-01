@@ -21,7 +21,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 JWT_SECRET = os.getenv("JWT_SECRET")
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://127.0.0.1:27017/exmora_assistant")
+MONGO_URI = os.getenv("MONGO_URI")
 
 # AWS Config
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
