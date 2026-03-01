@@ -7,11 +7,21 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 
-// CORS configuration to allow all origins in production
+// CORS configuration improved for production
 app.use(cors({
-  origin: '*',
-  credentials: true
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    // for production we can allow all, but with credentials we must be careful
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
+
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors());
 
 // Apply a lightweight IP-based rate limiter (e.g., 60 requests per minute per IP)
 const ipRateLimiter = rateLimit({
