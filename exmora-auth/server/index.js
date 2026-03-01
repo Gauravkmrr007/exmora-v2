@@ -7,21 +7,40 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 
-// CORS configuration improved for production
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    // for production we can allow all, but with credentials we must be careful
-    return callback(null, true);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+// 1. Manually add CORS headers to ALL responses as the very first middleware
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'https://exmora-ai.netlify.app',
+    'https://exmora-v2.netlify.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5500',
+    'http://127.0.0.1:5500',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
+  ];
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin) || (origin && origin.endsWith('netlify.app'))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  // Handle Preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
-// Handle preflight OPTIONS requests explicitly
-app.options('*', cors());
+// 2. Also keep the cors middleware as a backup
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 // Apply a lightweight IP-based rate limiter (e.g., 60 requests per minute per IP)
 const ipRateLimiter = rateLimit({
