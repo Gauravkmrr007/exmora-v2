@@ -10,13 +10,21 @@ const app = express();
 // Required for Express to work behind Render's proxy (fixes rate limit error)
 app.set('trust proxy', 1);
 
-console.log("Checking environment variables...");
-console.log("MONGO_URI is set:", !!process.env.MONGO_URI);
-if (process.env.MONGO_URI) {
-  // Mask password for safety in logs
-  const masked = process.env.MONGO_URI.replace(/:([^@]+)@/, ':****@');
-  console.log("Using Connection String:", masked);
+let mongoUri = process.env.MONGO_URI;
+
+// Automatically fix passwords with @ signs
+if (mongoUri && mongoUri.includes('@') && mongoUri.indexOf('@') !== mongoUri.lastIndexOf('@')) {
+    console.log("Auto-encoding special characters in MONGO_URI password...");
+    // Split into [mongodb+srv://user:, password@cluster...]
+    const parts = mongoUri.split(':');
+    if (parts.length >= 3) {
+        const passwordPart = parts[2].split('@')[0];
+        const encodedPassword = encodeURIComponent(passwordPart);
+        mongoUri = mongoUri.replace(passwordPart, encodedPassword);
+    }
 }
+
+console.log("MONGO_URI is set:", !!mongoUri);
 
 // 1. Manually add CORS headers to ALL responses as the very first middleware
 app.use((req, res, next) => {
@@ -89,7 +97,7 @@ app.get("/", (req, res) => {
 });
 
 // ✅ MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(mongoUri)
 
   .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.error("MongoDB connection error:", err));
