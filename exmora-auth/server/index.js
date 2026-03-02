@@ -7,6 +7,17 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 
+// Required for Express to work behind Render's proxy (fixes rate limit error)
+app.set('trust proxy', 1);
+
+console.log("Checking environment variables...");
+console.log("MONGO_URI is set:", !!process.env.MONGO_URI);
+if (process.env.MONGO_URI) {
+  // Mask password for safety in logs
+  const masked = process.env.MONGO_URI.replace(/:([^@]+)@/, ':****@');
+  console.log("Using Connection String:", masked);
+}
+
 // 1. Manually add CORS headers to ALL responses as the very first middleware
 app.use((req, res, next) => {
   const allowedOrigins = [
