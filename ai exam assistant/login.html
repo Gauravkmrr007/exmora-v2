@@ -387,6 +387,7 @@
           }
 
           errorContainer.innerHTML = `<div class="error-message">${friendlyMessage}</div>`;
+          window.alert("Technical Error: " + friendlyMessage);
           submitBtn.disabled = false;
           submitBtn.innerHTML = "Login to Workspace";
         }
