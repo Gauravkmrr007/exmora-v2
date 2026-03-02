@@ -76,15 +76,15 @@ router.post("/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-  { userId: user._id },
-  process.env.JWT_SECRET,
-  { expiresIn: "7d" }  // Token valid for 7 days
-);
-
+      { userId: user._id.toString() },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
     res.json({ token });
   } catch (err) {
-    res.status(500).json({ message: "Server error" });
+    console.error("Login route error:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 

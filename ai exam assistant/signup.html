@@ -500,9 +500,7 @@
               const data = await response.json();
 
               if (!response.ok) {
-                  // If local registration fails, we might want to handle it (e.g., Delete firebase user?)
-                  // For now, we'll just log it.
-                  console.error('Local DB sync failed:', data.message);
+                  throw new Error(data.error || data.message || 'Local DB sync failed');
               }
 
               // Show success modal
