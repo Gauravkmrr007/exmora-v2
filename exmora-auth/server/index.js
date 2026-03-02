@@ -25,6 +25,11 @@ if (mongoUri && mongoUri.includes('@') && mongoUri.indexOf('@') !== mongoUri.las
 }
 
 console.log("MONGO_URI is set:", !!mongoUri);
+console.log("JWT_SECRET is set:", !!process.env.JWT_SECRET);
+
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not defined in environment variables.");
+}
 
 // 1. Manually add CORS headers to ALL responses as the very first middleware
 app.use((req, res, next) => {
