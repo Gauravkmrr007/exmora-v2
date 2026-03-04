@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+if (process.env.JWT_SECRET) process.env.JWT_SECRET = process.env.JWT_SECRET.trim();
 const cors = require("cors");
 const mongoose = require("mongoose");
 const rateLimit = require("express-rate-limit");

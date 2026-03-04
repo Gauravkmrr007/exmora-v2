@@ -20,7 +20,7 @@ import json
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-JWT_SECRET = os.getenv("JWT_SECRET")
+JWT_SECRET = os.getenv("JWT_SECRET", "").strip()
 MONGO_URI = os.getenv("MONGO_URI")
 
 # AWS Config
@@ -72,24 +72,32 @@ if AWS_ACCESS_KEY and AWS_SECRET_KEY and AWS_BUCKET:
 # ---------------------------------------------------------
 async def verify_token(authorization: Optional[str] = Header(None)) -> str:
     if not authorization:
+        print("AUTH FAILURE: No authorization header")
         raise HTTPException(status_code=401, detail="No authorization header provided")
     
     try:
         parts = authorization.split()
         if len(parts) != 2 or parts[0].lower() != "bearer":
+            print(f"AUTH FAILURE: Invalid format. Header parts: {len(parts)}")
             raise HTTPException(status_code=401, detail="Invalid authorization header format")
         
         token = parts[1]
+        # Debug: check secret length (don't log the secret itself)
+        # print(f"DEBUG: Using JWT_SECRET of length {len(JWT_SECRET)}")
+        
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         user_id = payload.get("userId")
         
         if not user_id:
+            print("AUTH FAILURE: Decoded payload missing userId")
             raise HTTPException(status_code=401, detail="Invalid token payload: missing userId")
         
         return user_id
     except InvalidTokenError as e:
+        print(f"AUTH FAILURE: Invalid/Expired token: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Invalid or expired token: {str(e)}")
     except Exception as e:
+        print(f"AUTH FAILURE: General error: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
 
 def extract_text_from_pdf(pdf_file) -> str:
