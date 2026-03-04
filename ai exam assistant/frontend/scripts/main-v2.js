@@ -403,8 +403,9 @@ async function handleAsk() {
     const data = await res.json();
     removeMessage(loaderId);
 
-    if (data.error) {
-      addMessage("system", `Error: ${data.error}`);
+    if (!res.ok) {
+      const errorText = data.error || data.detail || "Server error";
+      addMessage("system", `Error (${res.status}): ${errorText}`);
       toggleInputLock(false);
     } else {
       currentSessionId = data.session_id; 
@@ -428,7 +429,15 @@ async function loadSessions() {
     const res = await fetch(`${API_BASE}/sessions`, {
       headers: { Authorization: `Bearer ${getToken()}` },
     });
+    if (!res.ok) {
+        console.error("Sessions fetch failed:", res.status);
+        return;
+    }
     const sessions = await res.json();
+    if (!Array.isArray(sessions)) {
+        console.error("Sessions response is not an array:", sessions);
+        return;
+    }
 
     responseBox.innerHTML = "";
     sessions.forEach((s) => {
