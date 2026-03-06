@@ -72,7 +72,7 @@
         background: var(--accent-gradient);
         border-radius: 12px;
         margin-bottom: 16px;
-        box-shadow: 0 0 24px rgba(168, 85, 247, 0.4);
+        box-shadow: 0 0 24px rgba(37, 99, 235, 0.4);
       }
 
       .auth-title {
@@ -123,9 +123,9 @@
 
       .form-input:focus {
         outline: none;
-        border-color: #a855f7;
+        border-color: #2563EB;
         background: rgba(0, 0, 0, 0.4);
-        box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.1);
       }
 
       .form-input::placeholder {
@@ -150,7 +150,7 @@
         border: none;
         cursor: pointer;
         margin-top: 8px;
-        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -170,7 +170,7 @@
 
       .submit-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 24px rgba(168, 85, 247, 0.5);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.5);
       }
 
       .submit-btn:hover::before {
@@ -213,7 +213,7 @@
       }
 
       .auth-link {
-        color: #c084fc;
+        color: #60A5FA;
         font-weight: 500;
         text-decoration: none;
         transition: color 0.2s;
@@ -221,7 +221,7 @@
       }
 
       .auth-link:hover {
-        color: #e879f9;
+        color: #93C5FD;
       }
 
       .back-home {
@@ -320,12 +320,12 @@
         border: none;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 10px 20px rgba(168, 85, 247, 0.2);
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
       }
 
       .modal-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 15px 25px rgba(168, 85, 247, 0.3);
+        box-shadow: 0 15px 25px rgba(37, 99, 235, 0.3);
       }
 
       @media (max-width: 480px) {
@@ -338,9 +338,9 @@
   <body>
     <!-- Background Effects from landing.css -->
     <div class="bg-noise"></div>
-    <div class="glow-orb top" style="top: -20%; left: -10%; width: 80vw;"></div>
-    <div class="glow-orb right" style="bottom: -20%; top: auto; right: -20%;"></div>
-    <div class="glow-orb center" style="top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(99, 102, 241, 0.05) 40%, transparent 60%); z-index: 0;"></div>
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
 
     <div class="auth-wrapper">
       <div class="auth-card">
