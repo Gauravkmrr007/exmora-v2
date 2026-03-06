@@ -240,6 +240,82 @@
             background: rgba(255,255,255,0.06); border-color: rgba(37, 99, 235, 0.4); transform: translateY(-2px); box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);
         }
 
+        /* === DRAG & DROP UPLOAD ZONE === */
+        .drop-upload-zone {
+            width: 100%;
+            max-width: 420px;
+            border: 2px dashed rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(8px);
+            margin-bottom: 24px;
+        }
+        .drop-upload-zone:hover,
+        .drop-upload-zone.drag-over {
+            border-color: rgba(37, 99, 235, 0.6);
+            background: rgba(37, 99, 235, 0.07);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1), 0 8px 24px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+        .drop-upload-zone.drag-over {
+            border-color: #60A5FA;
+            background: rgba(37, 99, 235, 0.12);
+        }
+        .drop-icon {
+            color: #60A5FA;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
+            transition: transform 0.25s;
+        }
+        .drop-upload-zone:hover .drop-icon,
+        .drop-upload-zone.drag-over .drop-icon { transform: translateY(-4px); }
+        .drop-title {
+            font-size: 1rem; font-weight: 600; color: #e2e8f0; margin: 0 0 6px;
+        }
+        .drop-subtitle {
+            font-size: 0.85rem; color: #64748b; margin: 0;
+        }
+        .drop-browse-btn {
+            background: none; border: none; color: #60A5FA; font-size: 0.85rem;
+            cursor: pointer; font-family: inherit; padding: 0;
+            text-decoration: underline; text-underline-offset: 2px;
+            transition: color 0.2s;
+        }
+        .drop-browse-btn:hover { color: #93C5FD; }
+
+        /* === BOOKMARK CARDS in right panel === */
+        .bookmark-card {
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            line-height: 1.5;
+            position: relative;
+            transition: background 0.2s;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+        .bookmark-card:hover { background: rgba(0,0,0,0.35); }
+        .bookmark-meta {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 8px;
+        }
+        .bookmark-timestamp { font-size: 0.72rem; color: #475569; }
+        .bookmark-remove {
+            background: none; border: none; color: #475569; cursor: pointer;
+            font-size: 1rem; line-height: 1; padding: 0;
+            transition: color 0.2s;
+        }
+        .bookmark-remove:hover { color: #ef4444; }
+
+
         /* === CHAT BUBBLES === */
         .message {
             width: 100%;
@@ -646,14 +722,24 @@
 
             <!-- Chat Feed (Output Console) -->
             <div class="chat-feed" id="chat-history">
-                <div class="welcome-screen">
+                <div class="welcome-screen" id="drop-zone">
                     <div class="glow-icon-container">
                         <i data-lucide="sparkles" size="32" class="animated-sparkle"></i>
                     </div>
                     <div class="welcome-text">
                         <h1>Start researching</h1>
-                        <p id="welcome-instruction">Upload a document, attach a file, or enter a complex query to initialize an intelligent session.</p>
+                        <p id="welcome-instruction">Upload a document or ask a question to begin your session.</p>
                     </div>
+
+                    <!-- Drag & Drop Upload Zone -->
+                    <div class="drop-upload-zone" id="drop-upload-area">
+                        <div class="drop-icon">
+                            <i data-lucide="file-up" size="28"></i>
+                        </div>
+                        <p class="drop-title">Drag &amp; drop your document here</p>
+                        <p class="drop-subtitle">Supports PDF only &mdash; or <button class="drop-browse-btn" onclick="document.getElementById('file-input').click()">browse files</button></p>
+                    </div>
+
                     <div class="empty-suggestions">
                         <button class="suggestion-chip" onclick="document.getElementById('query-input').value = 'Extract insights from local PDF...';"><i data-lucide="file-text" size="16"></i> Extract insights from PDF</button>
                         <button class="suggestion-chip" onclick="document.getElementById('query-input').value = 'Explain the attention mechanism in Transformers';"><i data-lucide="zap" size="16"></i> Explain complex concepts</button>
@@ -719,17 +805,20 @@
         <aside class="insight-panel hidden-mobile collapsed" id="insight-panel">
             <div class="insight-header" style="justify-content: center;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <i data-lucide="lightbulb" size="18" style="color: #2563EB;"></i> 
-                    <span class="insight-title">Research Context</span>
+                    <i data-lucide="bookmark" size="18" style="color: #2563EB;"></i>
+                    <span class="insight-title">Bookmarks</span>
                 </div>
             </div>
             <div class="insight-content">
-                
-                <!-- Contextual Suggestions -->
-                <div class="insight-section" id="context-suggestions">
-                    <h4>Smart Actions</h4>
-                    <div class="quick-tools">
-                        <button class="q-tool-btn" onclick="document.getElementById('query-input').value='Provide a comprehensive technical summary of this workspace.'; if(!document.getElementById('ask-btn').disabled) document.getElementById('ask-btn').click();"><i data-lucide="align-left" size="16"></i> <span>Summarize Workspace</span></button>
+
+                <!-- Bookmarks Section -->
+                <div class="insight-section" id="bookmarks-section">
+                    <h4>Saved from chat</h4>
+                    <div id="bookmarks-list" style="display:flex; flex-direction:column; gap:8px;">
+                        <div id="bookmarks-empty" style="text-align:center; padding:24px 0; color:#475569; font-size:0.85rem;">
+                            <i data-lucide="bookmark-plus" size="28" style="color:#334155; display:block; margin:0 auto 10px;"></i>
+                            No bookmarks yet.<br>Click the bookmark button on any AI response to save it here.
+                        </div>
                     </div>
                 </div>
 

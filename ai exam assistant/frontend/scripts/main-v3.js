@@ -12,6 +12,7 @@ const stopBtn = document.getElementById("stop-btn");
 const newChatBtn = document.getElementById("new-chat-btn");
 const chatHistory = document.getElementById("chat-history");
 const welcomeScreen = document.querySelector(".welcome-screen");
+const dropUploadArea = document.getElementById("drop-upload-area");
 
 // Toolbar items
 const quizBtn = document.getElementById("quiz-btn");
@@ -37,6 +38,56 @@ let typingTimeout = null;
 let recognition = null;
 let isRecording = false;
 let silenceTimer = null;
+
+// Bookmarks stored in localStorage
+const BOOKMARK_KEY = "exmora_bookmarks";
+function getBookmarks() {
+  try { return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]"); }
+  catch { return []; }
+}
+function saveBookmarks(arr) {
+  localStorage.setItem(BOOKMARK_KEY, JSON.stringify(arr));
+}
+function addBookmark(text) {
+  const bm = getBookmarks();
+  bm.unshift({ id: Date.now(), text: text.trim().slice(0, 300), ts: Date.now() });
+  saveBookmarks(bm.slice(0, 50)); // cap at 50
+  renderBookmarks();
+}
+function renderBookmarks() {
+  const list = document.getElementById("bookmarks-list");
+  const empty = document.getElementById("bookmarks-empty");
+  if (!list) return;
+  const bm = getBookmarks();
+  // Remove existing cards
+  list.querySelectorAll(".bookmark-card").forEach(el => el.remove());
+  if (bm.length === 0) {
+    if (empty) empty.style.display = "";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+  bm.forEach(b => {
+    const card = document.createElement("div");
+    card.className = "bookmark-card";
+    card.dataset.id = b.id;
+    const snippet = b.text.length > 120 ? b.text.slice(0, 120) + "…" : b.text;
+    const timeStr = new Date(b.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    card.innerHTML = `
+      <div class="bookmark-text">${snippet}</div>
+      <div class="bookmark-meta">
+        <span class="bookmark-timestamp">${timeStr}</span>
+        <button class="bookmark-remove" title="Remove bookmark" data-id="${b.id}">×</button>
+      </div>`;
+    card.querySelector(".bookmark-remove").onclick = (e) => {
+      e.stopPropagation();
+      const updated = getBookmarks().filter(x => x.id !== b.id);
+      saveBookmarks(updated);
+      renderBookmarks();
+    };
+    list.insertBefore(card, list.firstChild);
+  });
+}
+
 
 // --- Time Utilities ---
 function getRelativeTime(timestamp) {
@@ -94,9 +145,60 @@ async function init() {
   // Enable input so user can type immediately (without uploading a PDF)
   queryInput.disabled = false;
   askBtn.disabled = false;
+
+  // Render any saved bookmarks into the right panel
+  renderBookmarks();
 }
 
 // --- Event Listeners ---
+
+// 0. Drag & Drop on the welcome zone
+if (dropUploadArea) {
+  // Clicking the zone triggers file browser
+  dropUploadArea.addEventListener("click", () => {
+    if (!getToken()) return (window.location.href = "login.html");
+    fileInput.click();
+  });
+  // Prevent the browse button from double-firing
+  dropUploadArea.addEventListener("click", (e) => {
+    if (e.target.classList.contains("drop-browse-btn")) e.stopPropagation();
+  });
+
+  ["dragenter", "dragover"].forEach(evt =>
+    dropUploadArea.addEventListener(evt, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dropUploadArea.classList.add("drag-over");
+    })
+  );
+  ["dragleave", "drop"].forEach(evt =>
+    dropUploadArea.addEventListener(evt, (e) => {
+      e.preventDefault(); e.stopPropagation();
+      dropUploadArea.classList.remove("drag-over");
+    })
+  );
+  dropUploadArea.addEventListener("drop", (e) => {
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    // Inject into the real file input and fire change
+    const dt = new DataTransfer();
+    for (let i = 0; i < Math.min(files.length, 3); i++) dt.items.add(files[i]);
+    fileInput.files = dt.files;
+    fileInput.dispatchEvent(new Event("change"));
+  });
+}
+
+// Also allow drop anywhere on the chat feed when welcome screen is shown
+document.addEventListener("dragover", (e) => e.preventDefault());
+document.addEventListener("drop", (e) => {
+  if (!welcomeScreen || welcomeScreen.style.display === "none") return;
+  e.preventDefault();
+  const files = e.dataTransfer.files;
+  if (!files || files.length === 0) return;
+  const dt = new DataTransfer();
+  for (let i = 0; i < Math.min(files.length, 3); i++) dt.items.add(files[i]);
+  fileInput.files = dt.files;
+  fileInput.dispatchEvent(new Event("change"));
+});
 
 // 1. Text Input Auto-Resize
 queryInput.addEventListener("input", () => {
@@ -485,15 +587,33 @@ async function loadSessions() {
           "Delete Session",
           "This action cannot be undone. Delete this session?",
           async () => {
-            await fetch(`${API_BASE}/sessions/${s._id}`, {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${getToken()}` },
-            });
+            // ✅ Remove from DOM INSTANTLY — don't wait for the API
+            item.style.transition = "opacity 0.2s, transform 0.2s";
+            item.style.opacity = "0";
+            item.style.transform = "translateX(-8px)";
+            setTimeout(() => item.remove(), 200);
+
+            // If deleting active session → reset to new chat immediately
             if (currentSessionId === s._id) {
               currentSessionId = null;
-              newChatBtn.click();
-            } else {
-              loadSessions();
+              chatHistory.innerHTML = "";
+              chatHistory.appendChild(welcomeScreen);
+              welcomeScreen.style.display = "flex";
+              docInfoBadge.classList.add("hidden");
+              quizBtn.classList.add("hidden");
+              summarizeBtn.classList.add("hidden");
+              queryInput.disabled = false;
+              askBtn.disabled = false;
+            }
+
+            // Fire API delete in background — no reload needed
+            try {
+              await fetch(`${API_BASE}/sessions/${s._id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${getToken()}` },
+              });
+            } catch (err) {
+              console.error("Session delete API error", err);
             }
           },
         );
@@ -591,7 +711,7 @@ function createMessageDiv(role) {
                 <button class="msg-action-btn" onclick="const text = this.closest('.message').querySelector('.msg-content').innerText; navigator.clipboard.writeText(text); const o=this.innerHTML; this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied'; setTimeout(()=>this.innerHTML=o,2000);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy summary</button>
                 <button class="msg-action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Regenerate</button>
                 <button class="msg-action-btn" onclick="document.getElementById('quiz-btn').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Generate Quiz</button>
-                <button class="msg-action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg> Bookmark</button>
+                <button class="msg-action-btn" onclick="const txt=this.closest('.message').querySelector('.msg-content').innerText; addBookmark(txt); const o=this.innerHTML; this.innerHTML='&#10003; Saved'; setTimeout(()=>this.innerHTML=o,2000);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg> Bookmark</button>
             </div>
         `;
   } else {
