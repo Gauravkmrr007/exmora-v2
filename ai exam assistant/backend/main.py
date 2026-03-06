@@ -13,6 +13,7 @@ import boto3
 from botocore.exceptions import ClientError
 from datetime import datetime
 import json
+import gc
 
 # ---------------------------------------------------------
 # setup things
@@ -102,12 +103,18 @@ async def verify_token(authorization: Optional[str] = Header(None)) -> str:
 
 def extract_text_from_pdf(pdf_file) -> str:
     text = ""
-    with pdfplumber.open(pdf_file) as pdf:
-        for page in pdf.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-    return text
+    try:
+        with pdfplumber.open(pdf_file) as pdf:
+            # OPTIMIZATION: Limit to first 50 pages to stay within Render memory limits
+            pages_to_read = pdf.pages[:50]
+            for page in pages_to_read:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        return text
+    finally:
+        # Crucial for Render free tier: explicitly trigger garbage collection
+        gc.collect()
 
 # ---------------------------------------------------------
 # API Endpoints
@@ -278,6 +285,10 @@ If the answer isn't in the documents, say so.
             "$set": {"updated_at": datetime.utcnow()}
         }
     )
+
+    # OPTIMIZATION: Clear memory after processing
+    del doc_context
+    gc.collect()
 
     return {
         "question": question,
