@@ -315,6 +315,43 @@
         }
         .bookmark-remove:hover { color: #ef4444; }
 
+        /* === BOOKMARK VIEW MODAL === */
+        #bookmark-view-modal {
+            display: none; position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px);
+            align-items: center; justify-content: center; padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+        .bm-view-content {
+            background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px; width: 800px; max-width: 100%; max-height: 85vh;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6);
+            animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .bm-view-header {
+            padding: 24px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .bm-view-title { font-size: 1.25rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 12px; }
+        .bm-view-body {
+            padding: 32px; overflow-y: auto; flex: 1; color: #cbd5e1; line-height: 1.7; font-size: 1rem;
+        }
+        .bm-view-body blockquote { border-left: 4px solid #2563EB; padding-left: 16px; margin: 16px 0; color: #94a3b8; }
+        .bm-view-body pre { background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; margin: 16px 0; overflow-x: auto; }
+        .bm-view-footer {
+            padding: 20px 32px; border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.5);
+        }
+        .bm-action-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; padding: 10px 20px; border-radius: 10px; font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .bm-action-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+        .bm-close-btn { color: #64748b; background: none; border: none; cursor: pointer; padding: 4px; }
+        .bm-close-btn:hover { color: #fff; }
+
 
         /* === CHAT BUBBLES === */
         .message {
@@ -728,7 +765,7 @@
                     </div>
                     <div class="welcome-text">
                         <h1>Start researching</h1>
-                        <p id="welcome-instruction">Upload a document or ask a question to begin your session.</p>
+                        <p id="welcome-instruction">Upload a document and ask a question to begin your session.</p>
                     </div>
 
                     <!-- Drag & Drop Upload Zone -->
@@ -909,6 +946,37 @@
             </div>
             <div id="changelog-modal-body" style="padding: 24px; max-height: 60vh; overflow-y: auto;">
                 <!-- Filled dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookmark View Modal -->
+    <div id="bookmark-view-modal">
+        <div class="bm-view-content">
+            <div class="bm-view-header">
+                <div class="bm-view-title">
+                    <i data-lucide="bookmark" size="20" style="color: #2563EB;"></i>
+                    <span>Saved Research Note</span>
+                </div>
+                <button class="bm-close-btn" onclick="document.getElementById('bookmark-view-modal').style.display='none'">
+                    <i data-lucide="x" size="24"></i>
+                </button>
+            </div>
+            <div class="bm-view-body" id="bm-full-content">
+                <!-- Full markdown content rendered here -->
+            </div>
+            <div class="bm-view-footer">
+                <span id="bm-view-date" style="font-size: 0.85rem; color: #64748b;">Saved Just now</span>
+                <div style="display: flex; gap: 12px;">
+                    <button class="bm-action-btn" id="bm-view-copy">
+                        <i data-lucide="copy" size="16"></i>
+                        <span>Copy Text</span>
+                    </button>
+                    <button class="bm-action-btn" id="bm-view-delete" style="color: #ef4444;">
+                        <i data-lucide="trash-2" size="16"></i>
+                        <span>Delete</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

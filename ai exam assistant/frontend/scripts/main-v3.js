@@ -50,8 +50,9 @@ function saveBookmarks(arr) {
 }
 function addBookmark(text) {
   const bm = getBookmarks();
-  bm.unshift({ id: Date.now(), text: text.trim().slice(0, 300), ts: Date.now() });
-  saveBookmarks(bm.slice(0, 50)); // cap at 50
+  // Store full text for the modal, but the sidebar will still show a snippet
+  bm.unshift({ id: Date.now(), text: text.trim(), ts: Date.now() });
+  saveBookmarks(bm.slice(0, 50)); // cap at 50 most recent
   renderBookmarks();
 }
 function renderBookmarks() {
@@ -69,23 +70,74 @@ function renderBookmarks() {
   bm.forEach(b => {
     const card = document.createElement("div");
     card.className = "bookmark-card";
+    card.style.cursor = "pointer";
     card.dataset.id = b.id;
     const snippet = b.text.length > 120 ? b.text.slice(0, 120) + "…" : b.text;
-    const timeStr = new Date(b.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const timeStr = new Date(b.ts).toLocaleDateString([], { month: 'short', day: 'numeric' });
     card.innerHTML = `
-      <div class="bookmark-text">${snippet}</div>
-      <div class="bookmark-meta">
+      <div class="bookmark-text" style="pointer-events:none;">${snippet}</div>
+      <div class="bookmark-meta" style="pointer-events:none;">
         <span class="bookmark-timestamp">${timeStr}</span>
-        <button class="bookmark-remove" title="Remove bookmark" data-id="${b.id}">×</button>
+        <button class="bookmark-remove" title="Remove bookmark" data-id="${b.id}" style="pointer-events:auto;">×</button>
       </div>`;
+    
+    // Open modal on card click
+    card.onclick = (e) => {
+      if (e.target.classList.contains("bookmark-remove")) return;
+      openBookmarkModal(b.id);
+    };
+
     card.querySelector(".bookmark-remove").onclick = (e) => {
       e.stopPropagation();
       const updated = getBookmarks().filter(x => x.id !== b.id);
       saveBookmarks(updated);
       renderBookmarks();
     };
-    list.insertBefore(card, list.firstChild);
+    list.appendChild(card); // Order: newest on top
   });
+}
+
+function openBookmarkModal(id) {
+  const b = getBookmarks().find(x => x.id === id);
+  if (!b) return;
+
+  const modal = document.getElementById("bookmark-view-modal");
+  const content = document.getElementById("bm-full-content");
+  const date = document.getElementById("bm-view-date");
+  const copyBtn = document.getElementById("bm-view-copy");
+  const delBtn = document.getElementById("bm-view-delete");
+
+  if (!modal || !content) return;
+
+  // Render full markdown
+  content.innerHTML = marked.parse(b.text);
+  renderMath(content);
+  enhanceCodeBlocks(content);
+  if(window.lucide) lucide.createIcons();
+
+  date.textContent = `Saved on ${new Date(b.ts).toLocaleString()}`;
+  
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(b.text);
+    const original = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i data-lucide="check" size="16"></i> <span>Copied!</span>';
+    lucide.createIcons();
+    setTimeout(() => { copyBtn.innerHTML = original; lucide.createIcons(); }, 2000);
+  };
+
+  delBtn.onclick = () => {
+    const updated = getBookmarks().filter(x => x.id !== b.id);
+    saveBookmarks(updated);
+    renderBookmarks();
+    modal.style.display = "none";
+  };
+
+  modal.style.display = "flex";
+
+  // Close on outside click
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.style.display = "none";
+  };
 }
 
 
