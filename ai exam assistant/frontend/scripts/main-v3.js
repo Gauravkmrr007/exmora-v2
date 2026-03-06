@@ -82,25 +82,18 @@ async function init() {
     userEmailEl.textContent = email;
   }
 
-  // Load Sessions Sidebar
+  // Load session history into sidebar — but do NOT auto-load any session.
+  // User always starts on a fresh new session (like ChatGPT / Perplexity).
+  // They can click any previous session in the sidebar to restore it.
   await loadSessions();
 
-  // Auto-load most recent session if none active
-  if (!currentSessionId) {
-    try {
-      const res = await fetch(`${API_BASE}/sessions`, {
-        headers: { Authorization: `Bearer ${getToken()}` },
-      });
-      if (res.ok) {
-        const history = await res.json();
-        if (Array.isArray(history) && history.length > 0) {
-          switchSession(history[0]._id);
-        }
-      }
-    } catch (e) {
-      console.error("Initial session load failed", e);
-    }
+  // Ensure the welcome screen is visible and input is ready for new chat
+  if (welcomeScreen) {
+    welcomeScreen.style.display = "flex";
   }
+  // Enable input so user can type immediately (without uploading a PDF)
+  queryInput.disabled = false;
+  askBtn.disabled = false;
 }
 
 // --- Event Listeners ---
