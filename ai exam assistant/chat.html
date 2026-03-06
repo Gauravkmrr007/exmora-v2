@@ -38,6 +38,8 @@
             font-family: 'Inter', sans-serif;
             margin: 0;
             overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
         }
 
         /* Ambient Background Context */
@@ -56,6 +58,7 @@
         .app-container {
             display: flex;
             height: 100vh;
+            height: 100dvh;
             width: 100vw;
             position: relative;
             z-index: 10;
@@ -136,7 +139,7 @@
             height: 72px; padding: 0 32px; display: flex; justify-content: space-between; align-items: center;
             border-bottom: none; background: rgba(11, 15, 26, 0.5); backdrop-filter: blur(10px); z-index: 10;
         }
-        .header-title { font-size: 0.9rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;}
+        .header-title { font-size: 0.9rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; flex: 1; }
         .icon-btn { background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s; padding: 6px; border-radius: 6px;}
         .icon-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
@@ -455,7 +458,7 @@
             .glass-header { padding: 0 20px; height: 60px; } 
             #menu-toggle { display: block !important; } 
             .chat-feed { padding-left: 16px; padding-right: 16px; } 
-            .input-area { padding-left: 16px; padding-right: 16px; padding-bottom: 24px; max-width: 100%;}
+            .input-area { padding-left: 16px; padding-right: 16px; padding-bottom: max(40px, env(safe-area-inset-bottom)); max-width: 100%;}
             .message { max-width: 100%; }
         }
 
