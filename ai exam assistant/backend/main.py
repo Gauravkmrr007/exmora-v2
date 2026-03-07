@@ -300,7 +300,7 @@ If the answer isn't in the documents, say so.
                 "https://openrouter.ai/api/v1/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=60.0
+                timeout=httpx.Timeout(90.0, connect=10.0)
             )
             
         if response.status_code != 200:

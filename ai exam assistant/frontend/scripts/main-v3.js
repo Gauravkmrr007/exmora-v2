@@ -556,11 +556,21 @@ async function handleAsk() {
       signal: currentController.signal,
     });
 
-    const data = await res.json();
+    let data;
+    try {
+        data = await res.json();
+    } catch (jsonErr) {
+        console.error("Failed to parse JSON response:", jsonErr);
+        removeMessage(loaderId);
+        addMessage("system", `⚠️ **Server error (${res.status})**: The server returned an invalid response. Please try again or check the server status.`);
+        toggleInputLock(false);
+        return;
+    }
+
     removeMessage(loaderId);
 
     if (!res.ok) {
-      const errorText = data.error || data.detail || "Server error";
+      const errorText = data.error || data.detail || JSON.stringify(data) || "Server error";
       addMessage("system", `Error (${res.status}): ${errorText}`);
       toggleInputLock(false);
     } else {
@@ -573,7 +583,10 @@ async function handleAsk() {
     }
   } catch (err) {
     removeMessage(loaderId);
-    if (err.name !== "AbortError") addMessage("system", "Network error.");
+    if (err.name !== "AbortError") {
+      const msg = err.message || "Unknown error";
+      addMessage("system", `⚠️ **Network error**: ${msg}. Please check your connection and the server status.`);
+    }
     toggleInputLock(false);
   }
 }
