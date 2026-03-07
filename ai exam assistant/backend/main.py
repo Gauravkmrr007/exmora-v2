@@ -15,6 +15,8 @@ from datetime import datetime
 import json
 import gc
 import time
+import tempfile
+import shutil
 
 # ---------------------------------------------------------
 # setup things
@@ -102,17 +104,15 @@ async def verify_token(authorization: Optional[str] = Header(None)) -> str:
         print(f"AUTH FAILURE: General error: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
 
-def extract_text_from_pdf(pdf_bytes: bytes) -> str:
+def extract_text_from_pdf(file_path: str) -> str:
     """
-    Extracts text from PDF bytes using PyMuPDF (fitz).
-    Speed-optimized using list-join and proper doc closing.
+    Extracts text from PDF file path using PyMuPDF (fitz).
+    Opens from disk to save RAM, uses list-join for speed.
     """
     try:
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        doc = fitz.open(file_path)
         text_parts = []
         for page in doc:
-            # "text" is the default, but being explicit.
-            # Some PDFs have bad fonts; MuPDF usually handles them, but we catch errors per-page.
             try:
                 page_text = page.get_text("text")
                 if page_text:
@@ -171,36 +171,44 @@ async def upload_pdf(files: List[UploadFile] = File(...), user_id: str = Depends
         if not file.filename.lower().endswith(".pdf"):
             return {"error": f"File {file.filename} is not a PDF. Only PDF files are supported."}
         
-        # Read file bytes once - much faster for local/Render memory
-        file_content = await file.read()
-        print(f"DEBUG: Read {file.filename} ({len(file_content)} bytes) in {time.time() - file_start:.4f}s")
-        
-        # Extract text
-        ext_start = time.time()
-        text = extract_text_from_pdf(file_content)
-        print(f"DEBUG: Text extraction for {file.filename} took {time.time() - ext_start:.4f}s")
+        # 1. Save to temporary file instead of reading all into RAM
+        # This is key for Render's 512MB limit
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                shutil.copyfileobj(file.file, tmp)
+                tmp_path = tmp.name
+            print(f"DEBUG: Saved {file.filename} to temp file in {time.time() - file_start:.4f}s")
+            
+            # 2. Extract text from the file path
+            ext_start = time.time()
+            text = extract_text_from_pdf(tmp_path)
+            print(f"DEBUG: Text extraction for {file.filename} took {time.time() - ext_start:.4f}s")
 
-        total_text_length += len(text)
-        
-        # Upload to S3 if configured
-        pdf_url = None
-        if s3_client and AWS_BUCKET:
-            s3_start = time.time()
-            try:
-                file_key = f"uploads/{user_id}/{int(datetime.now().timestamp())}_{file.filename}"
-                # Use the bytes directly for S3 to avoid another disk read
-                import io
-                s3_client.upload_fileobj(io.BytesIO(file_content), AWS_BUCKET, file_key)
-                pdf_url = f"https://{AWS_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{file_key}"
-                print(f"DEBUG: S3 Upload for {file.filename} took {time.time() - s3_start:.4f}s")
-            except Exception as e:
-                print(f"DEBUG: S3 Upload Error: {e}")
-        
-        documents.append({
-            "filename": file.filename,
-            "text": text,
-            "pdf_url": pdf_url
-        })
+            total_text_length += len(text)
+            
+            # 3. Upload to S3 if configured
+            pdf_url = None
+            if s3_client and AWS_BUCKET:
+                s3_start = time.time()
+                try:
+                    file_key = f"uploads/{user_id}/{int(datetime.now().timestamp())}_{file.filename}"
+                    # Upload directly from file path
+                    s3_client.upload_file(tmp_path, AWS_BUCKET, file_key)
+                    pdf_url = f"https://{AWS_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{file_key}"
+                    print(f"DEBUG: S3 Upload for {file.filename} took {time.time() - s3_start:.4f}s")
+                except Exception as e:
+                    print(f"DEBUG: S3 Upload Error: {e}")
+            
+            documents.append({
+                "filename": file.filename,
+                "text": text,
+                "pdf_url": pdf_url
+            })
+        finally:
+            # Clean up temp file immediately
+            if 'tmp_path' in locals() and os.path.exists(tmp_path):
+                os.remove(tmp_path)
+                
     print(f"DEBUG: Total upload processing took {time.time() - start_time:.4f}s")
 
     # Create new session in MongoDB
