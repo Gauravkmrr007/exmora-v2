@@ -20,9 +20,9 @@
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-
   --nav-height: 72px;
 }
+
 
 * {
   box-sizing: border-box;

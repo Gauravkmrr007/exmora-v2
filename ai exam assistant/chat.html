@@ -172,32 +172,20 @@
             overflow-y: hidden;
         }
 
+        /* Clean Actions Overlay */
         .workspace-header {
-            flex-shrink: 0;
-            padding: 24px 32px 16px;
+            position: absolute;
+            top: 16px; right: 24px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
-            background: transparent;
-            z-index: 10;
-            width: 100%;
+            z-index: 50;
+            pointer-events: none; /* Let clicks pass through empty space */
         }
-        .header-breadcrumb {
-            font-size: 0.7rem; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
-            display: flex; align-items: center; gap: 10px;
-            min-width: 0; flex: 1;
-            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        .header-actions {
+            display: flex; gap: 12px; pointer-events: auto;
         }
-        .header-breadcrumb i { color: #64748b; opacity: 0.6; }
-        .header-breadcrumb span { color: #1e293b; font-weight: 300; }
-        .header-breadcrumb .current-session { color: #94a3b8; letter-spacing: 0.5px; }
-        .header-title {
-            font-size: 0.9rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.5px;
-            display: flex; align-items: center; gap: 8px;
-            /* Prevent overflow, truncate with ellipsis */
-            min-width: 0; flex: 1;
-            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-        }
+        
         .icon-btn { background: none; border: none; color: #94a3b8; cursor: pointer; transition: color 0.2s; padding: 6px; border-radius: 6px; flex-shrink: 0; }
         .icon-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
 
@@ -210,7 +198,8 @@
             min-height: 0;
             overflow-y: auto;
             overflow-x: hidden; /* kill horizontal scroll completely */
-            padding: 24px 24px 16px;
+            /* Extra top padding so content doesn't hit floating header buttons */
+            padding: 72px 24px 16px;
             display: flex;
             flex-direction: column;
             scroll-behavior: smooth;
@@ -582,60 +571,50 @@
             white-space: nowrap; overflow: hidden;
         }
         
-        /* Professional Header Toggle Buttons (Inside Sidebar/Insight) */
         .workspace-toggle-btn {
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-            color: var(--text-dim); cursor: pointer; border-radius: 6px; padding: 5px;
+            background: transparent; border: none;
+            color: var(--text-dim); cursor: pointer; border-radius: 8px; padding: 0;
             display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-            flex-shrink: 0; width: 26px; height: 26px;
+            flex-shrink: 0; width: 40px; height: 40px;
         }
         .workspace-toggle-btn:hover {
-            background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06); color: #fff;
         }
 
-        /* App Floating Toggles (Clean Glass Design) */
-        .app-floating-toggle {
-            position: absolute; top: 16px; 
-            width: 28px; height: 28px; border-radius: 6px; padding: 0;
-            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
-            z-index: 100; border: 1px solid rgba(255,255,255,0.1);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: none; align-items: center; justify-content: center; color: #64748b;
-        }
-        .app-floating-toggle.collapsed { display: flex; }
-        .app-floating-toggle:hover {
-            background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); transform: scale(1.05); color: #fff;
-        }
-        
-        .app-left-toggle { left: 62px; }
-        .app-right-toggle { right: 62px; }
+        .workspace-toggle-btn.collapsed .icon-expanded { display: none; }
+        .workspace-toggle-btn:not(.collapsed) .icon-collapsed { display: none; }
+
         
         /* Sidebar Collapsed */
-        .sidebar.collapsed { width: 72px; padding: 24px 8px; align-items: center; }
-        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed { width: 72px; padding: 24px 0; align-items: center; }
+        .sidebar.collapsed .logo-item,
+        .sidebar.collapsed .logo-icon,
+        .sidebar.collapsed .logo-text-group,
         .sidebar.collapsed .new-chat-btn span,
         .sidebar.collapsed .user-email,
         .sidebar.collapsed .history-content { display: none !important; }
-        .sidebar.collapsed .sidebar-header { justify-content: center; padding: 0; width: 100%; margin-bottom: 24px; }
+        .sidebar.collapsed .sidebar-header-content { justify-content: center; align-items: center; width: 100%; display: flex; padding: 0; }
+        .sidebar.collapsed #sidebar-collapse-btn { margin: 0; }
+        .sidebar.collapsed .sidebar-header { justify-content: center; padding: 0; width: 100%; margin: 0 0 24px 0; }
         .sidebar.collapsed .new-chat-btn { padding: 12px; justify-content: center; border-radius: 50%; width: 42px; height: 42px; }
         .sidebar.collapsed .history-icon-only { display: flex !important; margin: auto; }
         .sidebar.collapsed .user-profile { flex-direction: column; padding: 12px 0; gap: 16px; border: none; background: transparent; }
         
         /* Insight Panel Collapsed */
-        .insight-panel.collapsed { width: 72px; padding: 0; align-items: center; }
+        .insight-panel.collapsed { width: 72px; padding: 24px 0; align-items: center; overflow: hidden; }
         .insight-panel.collapsed .insight-title,
+        .insight-panel.collapsed .insight-content,
         .insight-panel.collapsed .vis-card,
         .insight-panel.collapsed #bookmarks-section,
         .insight-panel.collapsed .insight-section,
         .insight-panel.collapsed .insight-section h4,
         .insight-panel.collapsed .shortcut-item,
         .insight-panel.collapsed .changelog-container,
-        .insight-panel.collapsed .insight-chips { display: none; }
-        .insight-panel.collapsed .insight-header { padding: 24px 0 0 0; justify-content: center; border-bottom: none; width: 100%; flex-direction: column; gap: 16px; }
-        .insight-panel.collapsed .insight-content { padding: 16px 8px; align-items: center; }
-        .insight-panel.collapsed .q-tool-btn { padding: 12px; justify-content: center; margin-bottom: 8px; width: 42px; height: 42px; border-radius: 50%; }
-        .insight-panel.collapsed .q-tool-btn span { display: none; }
-        .insight-panel.collapsed .q-tool-btn i { margin: 0; }
+        .insight-panel.collapsed .insight-chips { display: none !important; }
+        .insight-panel.collapsed .insight-header { padding: 0; height: auto !important; justify-content: center; border-bottom: none; width: 100%; flex-direction: column; gap: 16px; align-items: center; display: flex !important; margin: 0; }
+        .insight-panel.collapsed #insight-collapse-btn { order: 1; margin: 0; }
+        .insight-panel.collapsed .insight-header-label { order: 2; margin: 0; display: flex !important; }
+        .insight-panel.collapsed .q-tool-btn { display: none !important; }
         .insight-panel.collapsed .insight-section-toggle i { display: none; }
 
         /* Productivity Hub Styles */
@@ -726,8 +705,9 @@
                         <span class="logo-text">Exmora</span>
                         <div style="font-size:0.6rem; color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">v1.3.0 Live</div>
                     </div>
-                    <button class="workspace-toggle-btn sidebar-internal-toggle" title="Collapse Sidebar (⌘B)">
-                        <i data-lucide="panel-left" size="16"></i>
+                    <button id="sidebar-collapse-btn" class="workspace-toggle-btn" title="Collapse Sidebar (⌘B)">
+                        <i data-lucide="panel-left-close" class="icon-expanded" size="20"></i>
+                        <i data-lucide="panel-left-open" class="icon-collapsed" size="20"></i>
                     </button>
                 </div>
             </div>
@@ -759,22 +739,15 @@
             </div>
         </aside>
 
-        <button id="sidebar-collapse-btn" class="app-floating-toggle app-left-toggle collapsed" title="Expand Sidebar (⌘B)">
-            <i data-lucide="panel-left-open" size="16"></i>
-        </button>
+
 
         <!-- ==== MAIN CHAT WORKSPACE ==== -->
         <main class="main-content">
-            <!-- Header (New Breadcrumb Design) -->
+            <!-- Clean Actions Overlay -->
             <header class="workspace-header">
-                <div class="header-breadcrumb">
-                    <i data-lucide="layout" size="12"></i>
-                    Workspace <span>/</span> <div class="current-session" id="breadcrumb-session">active_session</div>
-                </div>
-                
-                <div class="header-actions" style="display:flex; gap:12px;">
+                <div class="header-actions">
                     <button id="export-btn" class="icon-btn" title="Export Logs">
-                        <i data-lucide="download" size="16"></i>
+                        <i data-lucide="download" size="18"></i>
                     </button>
                     <!-- Mobile Toggle -->
                     <button id="menu-toggle" class="icon-btn" style="display:none;" title="Toggle Sidebar">
@@ -861,18 +834,17 @@
         </main>
         
         <!-- ==== RIGHT INSIGHT PANEL ==== -->
-        <button id="insight-collapse-btn" class="app-floating-toggle app-right-toggle collapsed" title="Expand Panel (⌘⇧R)">
-            <i data-lucide="panel-right-open" size="16"></i>
-        </button>
+
 
         <aside class="insight-panel hidden-mobile collapsed" id="insight-panel">
             <div class="insight-header" style="justify-content: space-between; padding: 0 16px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i data-lucide="bookmark" size="18" style="color: var(--primary);"></i>
+                <div class="insight-header-label" style="display:flex; align-items:center; gap:10px;">
+                    <i data-lucide="bookmark" size="20" style="color: var(--primary);"></i>
                     <span class="insight-title">Bookmarks</span>
                 </div>
-                <button class="workspace-toggle-btn insight-internal-toggle" title="Collapse Panel (⌘⇧R)">
-                    <i data-lucide="panel-right" size="16"></i>
+                <button id="insight-collapse-btn" class="workspace-toggle-btn collapsed" title="Expand Panel (⌘⇧R)">
+                    <i data-lucide="panel-right-close" class="icon-expanded" size="20"></i>
+                    <i data-lucide="panel-right-open" class="icon-collapsed" size="20"></i>
                 </button>
             </div>
             <div class="insight-content">
@@ -1069,7 +1041,6 @@
         // Workspace Collapse Logic
         const sidebarEl = document.getElementById('sidebar');
         const sidebarToggleBtn = document.getElementById('sidebar-collapse-btn');
-        const sidebarInternalToggle = document.querySelector('.sidebar-internal-toggle');
         
         function toggleLeft() {
             sidebarEl.classList.toggle('collapsed');
@@ -1078,11 +1049,9 @@
             sidebarToggleBtn.title = isColl ? "Expand Sidebar" : "Collapse Sidebar";
         }
         sidebarToggleBtn.addEventListener('click', toggleLeft);
-        if(sidebarInternalToggle) sidebarInternalToggle.addEventListener('click', toggleLeft);
 
         const insightPanel = document.getElementById('insight-panel');
         const insightToggleBtn = document.getElementById('insight-collapse-btn');
-        const insightInternalToggle = document.querySelector('.insight-internal-toggle');
         
         function toggleRight() {
             insightPanel.classList.toggle('collapsed');
@@ -1091,7 +1060,6 @@
             insightToggleBtn.title = isColl ? "Expand Panel" : "Collapse Panel";
         }
         insightToggleBtn.addEventListener('click', toggleRight);
-        if(insightInternalToggle) insightInternalToggle.addEventListener('click', toggleRight);
     </script>
     <script src="./frontend/scripts/main-v3.js?v=301"></script>
 </body>
