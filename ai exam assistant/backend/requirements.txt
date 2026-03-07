@@ -3,7 +3,7 @@ uvicorn
 python-multipart
 python-dotenv
 requests
-pdfplumber
+pymupdf
 PyJWT
 python-jose[cryptography]
 motor

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from typing import Optional, List
 import os
-import pdfplumber
+import fitz
 import requests
 import jwt
 from jwt.exceptions import InvalidTokenError
@@ -102,18 +102,31 @@ async def verify_token(authorization: Optional[str] = Header(None)) -> str:
         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
 
 def extract_text_from_pdf(pdf_file) -> str:
-    text = ""
+    """
+    Extracts text from a PDF file stream using PyMuPDF (fitz) for high performance.
+    """
     try:
-        with pdfplumber.open(pdf_file) as pdf:
-            # OPTIMIZATION: Limit to first 50 pages to stay within Render memory limits
-            pages_to_read = pdf.pages[:50]
-            for page in pages_to_read:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
+        # Ensure pointer is at start
+        pdf_file.seek(0)
+        
+        # Open from stream
+        pdf = fitz.open(stream=pdf_file.read(), filetype="pdf")
+        
+        text = ""
+        # Extract text page by page (limiting to 100 pages for memory safety if needed, 
+        # but following user example mostly)
+        for page in pdf:
+            page_text = page.get_text()
+            if page_text:
+                text += page_text + "\n"
+        
+        pdf.close()
         return text
+    except Exception as e:
+        print(f"ERROR during PDF extraction: {e}")
+        return ""
     finally:
-        # Crucial for Render free tier: explicitly trigger garbage collection
+        # Crucial for memory management on lean environments
         gc.collect()
 
 # ---------------------------------------------------------
