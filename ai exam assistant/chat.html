@@ -172,22 +172,25 @@
             overflow-y: hidden;
         }
 
-        /* Header: fixed height, never scrolls */
-        .glass-header {
+        .workspace-header {
             flex-shrink: 0;
-            height: 60px;
-            padding: 0 24px;
+            padding: 24px 32px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(11, 15, 26, 0.85);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: transparent;
             z-index: 10;
-            /* Prevent it from growing */
             width: 100%;
-            max-width: 100%;
         }
+        .header-breadcrumb {
+            font-size: 0.7rem; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+            display: flex; align-items: center; gap: 10px;
+            min-width: 0; flex: 1;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .header-breadcrumb i { color: #64748b; opacity: 0.6; }
+        .header-breadcrumb span { color: #1e293b; font-weight: 300; }
+        .header-breadcrumb .current-session { color: #94a3b8; letter-spacing: 0.5px; }
         .header-title {
             font-size: 0.9rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.5px;
             display: flex; align-items: center; gap: 8px;
@@ -581,33 +584,31 @@
         
         /* Professional Header Toggle Buttons (Inside Sidebar/Insight) */
         .workspace-toggle-btn {
-            background: transparent; border: 1px solid transparent;
-            color: var(--text-dim); cursor: pointer; border-radius: 6px; padding: 6px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+            color: var(--text-dim); cursor: pointer; border-radius: 6px; padding: 5px;
             display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-            flex-shrink: 0;
+            flex-shrink: 0; width: 26px; height: 26px;
         }
         .workspace-toggle-btn:hover {
-            background: rgba(255,255,255,0.06); color: #fff; border-color: var(--glass-border);
+            background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.15);
         }
 
-        /* App Floating Toggles (Professional Linear-style) */
+        /* App Floating Toggles (Clean Glass Design) */
         .app-floating-toggle {
-            position: absolute; top: 12px;
-            width: 28px; height: 28px; border-radius: 7px; padding: 0;
-            background: #1e293b; /* Dark slate like Linear */
-            z-index: 100; border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            position: absolute; top: 16px; 
+            width: 28px; height: 28px; border-radius: 6px; padding: 0;
+            background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
+            z-index: 100; border: 1px solid rgba(255,255,255,0.1);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            display: none; /* Hidden by default when expanded */
-            align-items: center; justify-content: center; color: #cbd5e1;
+            display: none; align-items: center; justify-content: center; color: #64748b;
         }
         .app-floating-toggle.collapsed { display: flex; }
         .app-floating-toggle:hover {
-            background: #334155; border-color: rgba(255,255,255,0.2); transform: scale(1.05); color: #fff;
+            background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); transform: scale(1.05); color: #fff;
         }
         
-        .app-left-toggle { left: 8px; transform: translateX(52px); }
-        .app-right-toggle { right: 8px; transform: translateX(-52px); }
+        .app-left-toggle { left: 62px; }
+        .app-right-toggle { right: 62px; }
         
         /* Sidebar Collapsed */
         .sidebar.collapsed { width: 72px; padding: 24px 8px; align-items: center; }
@@ -764,13 +765,16 @@
 
         <!-- ==== MAIN CHAT WORKSPACE ==== -->
         <main class="main-content">
-            <!-- Header -->
-            <header class="glass-header">
-                <div class="header-title"><i data-lucide="layout-dashboard" size="16"></i> Workspace / active_session</div>
+            <!-- Header (New Breadcrumb Design) -->
+            <header class="workspace-header">
+                <div class="header-breadcrumb">
+                    <i data-lucide="layout" size="12"></i>
+                    Workspace <span>/</span> <div class="current-session" id="breadcrumb-session">active_session</div>
+                </div>
                 
                 <div class="header-actions" style="display:flex; gap:12px;">
                     <button id="export-btn" class="icon-btn" title="Export Logs">
-                        <i data-lucide="download" size="18"></i>
+                        <i data-lucide="download" size="16"></i>
                     </button>
                     <!-- Mobile Toggle -->
                     <button id="menu-toggle" class="icon-btn" style="display:none;" title="Toggle Sidebar">
