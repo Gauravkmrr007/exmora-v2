@@ -244,6 +244,9 @@
         .suggestion-chip:hover {
             background: rgba(255,255,255,0.06); border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 8px 16px var(--primary-glow);
         }
+        .suggestion-chip:disabled {
+            opacity: 0.5; cursor: not-allowed; filter: grayscale(1); transform: none !important; box-shadow: none !important;
+        }
 
         /* === DRAG & DROP UPLOAD ZONE === */
         .drop-upload-zone {
@@ -778,8 +781,8 @@
                     </div>
 
                     <div class="empty-suggestions">
-                        <button class="suggestion-chip" onclick="document.getElementById('query-input').value = 'Extract insights from local PDF...';"><i data-lucide="file-text" size="16"></i> Extract insights from PDF</button>
-                        <button class="suggestion-chip" onclick="document.getElementById('query-input').value = 'Explain the attention mechanism in Transformers';"><i data-lucide="zap" size="16"></i> Explain complex concepts</button>
+                        <button id="extract-insights-btn" class="suggestion-chip" onclick="document.getElementById('query-input').value = 'Extract insights from local PDF...';" disabled><i data-lucide="file-text" size="16"></i> Extract insights from PDF</button>
+                        <button id="explain-concepts-btn" class="suggestion-chip" onclick="document.getElementById('query-input').value = 'Explain the attention mechanism in Transformers';" disabled><i data-lucide="zap" size="16"></i> Explain complex concepts</button>
                     </div>
                 </div>
             </div>

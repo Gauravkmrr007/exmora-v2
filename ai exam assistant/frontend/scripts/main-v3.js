@@ -22,6 +22,8 @@ const docNameEl = document.getElementById("doc-name");
 const removeDocBtn = document.getElementById("remove-doc-btn");
 const exportBtn = document.getElementById("export-btn");
 const voiceTrigger = document.getElementById("voice-trigger");
+const extractInsightsBtn = document.getElementById("extract-insights-btn");
+const explainConceptsBtn = document.getElementById("explain-concepts-btn");
 
 // Sidebar
 const sidebar = document.getElementById("sidebar");
@@ -198,8 +200,15 @@ async function init() {
   queryInput.disabled = false;
   askBtn.disabled = false;
 
-  // Render any saved bookmarks into the right panel
+// Render any saved bookmarks into the right panel
   renderBookmarks();
+  // Initial suggestions state
+  toggleSuggestions(false);
+}
+
+function toggleSuggestions(enabled) {
+  if (extractInsightsBtn) extractInsightsBtn.disabled = !enabled;
+  if (explainConceptsBtn) explainConceptsBtn.disabled = !enabled;
 }
 
 // --- Event Listeners ---
@@ -316,7 +325,8 @@ fileInput.addEventListener("change", async () => {
 
       // UI Reset for new session
       chatHistory.innerHTML = "";
-      if (welcomeScreen) welcomeScreen.style.display = "none";
+      chatHistory.appendChild(welcomeScreen);
+      if (welcomeScreen) welcomeScreen.style.display = "flex";
 
       const docNames = Array.from(files)
         .map((f) => f.name)
@@ -326,6 +336,7 @@ fileInput.addEventListener("change", async () => {
       voiceTrigger.classList.remove("hidden");
       quizBtn.classList.remove("hidden");
       summarizeBtn.classList.remove("hidden");
+      toggleSuggestions(true);
 
       addMessage("system", `PDF context active: **${docNames}**.`);
       toggleInputLock(false);
@@ -368,6 +379,7 @@ removeDocBtn.addEventListener("click", async () => {
         chatHistory.appendChild(welcomeScreen);
         welcomeScreen.style.display = "flex";
         docInfoBadge.classList.add("hidden");
+        toggleSuggestions(false);
 
         loadSessions();
       } catch (e) {
@@ -399,6 +411,7 @@ newChatBtn.addEventListener("click", () => {
   docInfoBadge.classList.add("hidden");
   quizBtn.classList.add("hidden");
   summarizeBtn.classList.add("hidden");
+  toggleSuggestions(false);
   queryInput.disabled = false;
   askBtn.disabled = false;
 });
@@ -710,6 +723,7 @@ async function switchSession(id) {
     removeMessage(loaderId);
 
     chatHistory.innerHTML = "";
+    // Hide by default, we will decide to show it if no messages exist
     if (welcomeScreen) welcomeScreen.style.display = "none";
 
     // Restore Doc context UI
@@ -726,21 +740,26 @@ async function switchSession(id) {
       voiceTrigger.classList.remove("hidden");
       quizBtn.classList.remove("hidden");
       summarizeBtn.classList.remove("hidden");
+      toggleSuggestions(true);
     } else {
       docInfoBadge.classList.add("hidden");
       voiceTrigger.classList.add("hidden");
       quizBtn.classList.add("hidden");
       summarizeBtn.classList.add("hidden");
+      toggleSuggestions(false);
     }
 
     // Restore messages
     if (data.messages && data.messages.length > 0) {
+      if (welcomeScreen) welcomeScreen.style.display = "none";
       data.messages.forEach((m) => {
         addMessage("user", m.q);
         addMessage("ai", m.a);
       });
     } else {
-      addMessage("system", "Session restored. How can I help you today?");
+      // No messages, show welcome screen (which will have suggestions enabled/disabled via toggleSuggestions below)
+      chatHistory.appendChild(welcomeScreen);
+      if (welcomeScreen) welcomeScreen.style.display = "flex";
     }
 
     // CRITICAL FIX: Unlock input after switching
