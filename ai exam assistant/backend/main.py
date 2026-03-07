@@ -14,6 +14,7 @@ from botocore.exceptions import ClientError
 from datetime import datetime
 import json
 import gc
+import time
 
 # ---------------------------------------------------------
 # setup things
@@ -101,32 +102,32 @@ async def verify_token(authorization: Optional[str] = Header(None)) -> str:
         print(f"AUTH FAILURE: General error: {str(e)}")
         raise HTTPException(status_code=401, detail=f"Authentication error: {str(e)}")
 
-def extract_text_from_pdf(pdf_file) -> str:
+def extract_text_from_pdf(pdf_bytes: bytes) -> str:
     """
-    Extracts text from a PDF file stream using PyMuPDF (fitz) for high performance.
+    Extracts text from PDF bytes using PyMuPDF (fitz).
+    Speed-optimized using list-join and proper doc closing.
     """
     try:
-        # Ensure pointer is at start
-        pdf_file.seek(0)
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        text_parts = []
+        for page in doc:
+            # "text" is the default, but being explicit.
+            # Some PDFs have bad fonts; MuPDF usually handles them, but we catch errors per-page.
+            try:
+                page_text = page.get_text("text")
+                if page_text:
+                    text_parts.append(page_text)
+            except Exception as page_err:
+                print(f"DEBUG: Skipping page due to error: {page_err}")
+                continue
         
-        # Open from stream
-        pdf = fitz.open(stream=pdf_file.read(), filetype="pdf")
-        
-        text = ""
-        # Extract text page by page (limiting to 100 pages for memory safety if needed, 
-        # but following user example mostly)
-        for page in pdf:
-            page_text = page.get_text()
-            if page_text:
-                text += page_text + "\n"
-        
-        pdf.close()
-        return text
+        full_text = "\n".join(text_parts)
+        doc.close()
+        return full_text
     except Exception as e:
-        print(f"ERROR during PDF extraction: {e}")
+        print(f"ERROR: General PDF extraction failure: {e}")
         return ""
     finally:
-        # Crucial for memory management on lean environments
         gc.collect()
 
 # ---------------------------------------------------------
@@ -164,28 +165,35 @@ async def upload_pdf(files: List[UploadFile] = File(...), user_id: str = Depends
     documents = []
     total_text_length = 0
 
+    start_time = time.time()
     for file in files:
+        file_start = time.time()
         if not file.filename.lower().endswith(".pdf"):
             return {"error": f"File {file.filename} is not a PDF. Only PDF files are supported."}
         
+        # Read file bytes once - much faster for local/Render memory
+        file_content = await file.read()
+        print(f"DEBUG: Read {file.filename} ({len(file_content)} bytes) in {time.time() - file_start:.4f}s")
+        
         # Extract text
-        try:
-            text = extract_text_from_pdf(file.file)
-        except Exception as e:
-             return {"error": f"Failed to extract text from {file.filename}: {str(e)}"}
+        ext_start = time.time()
+        text = extract_text_from_pdf(file_content)
+        print(f"DEBUG: Text extraction for {file.filename} took {time.time() - ext_start:.4f}s")
 
         total_text_length += len(text)
         
         # Upload to S3 if configured
         pdf_url = None
         if s3_client and AWS_BUCKET:
+            s3_start = time.time()
             try:
                 file_key = f"uploads/{user_id}/{int(datetime.now().timestamp())}_{file.filename}"
-                file.file.seek(0) # reset file pointer
-                s3_client.upload_fileobj(file.file, AWS_BUCKET, file_key)
+                # Use the bytes directly for S3 to avoid another disk read
+                import io
+                s3_client.upload_fileobj(io.BytesIO(file_content), AWS_BUCKET, file_key)
                 pdf_url = f"https://{AWS_BUCKET}.s3.{AWS_REGION}.amazonaws.com/{file_key}"
-                print(f"DEBUG: Successfully uploaded {file.filename} to S3 bucket {AWS_BUCKET}. URL: {pdf_url}")
-            except ClientError as e:
+                print(f"DEBUG: S3 Upload for {file.filename} took {time.time() - s3_start:.4f}s")
+            except Exception as e:
                 print(f"DEBUG: S3 Upload Error: {e}")
         
         documents.append({
@@ -193,6 +201,7 @@ async def upload_pdf(files: List[UploadFile] = File(...), user_id: str = Depends
             "text": text,
             "pdf_url": pdf_url
         })
+    print(f"DEBUG: Total upload processing took {time.time() - start_time:.4f}s")
 
     # Create new session in MongoDB
     # If multiple files, title can be "Doc1, Doc2..." or just first doc name + others
