@@ -579,34 +579,35 @@
             white-space: nowrap; overflow: hidden;
         }
         
-        .toggle-btn { 
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); 
-            color: #94a3b8; cursor: pointer; border-radius: 8px; padding: 4px; 
-            display: flex; align-items: center; justify-content: center; transition: all 0.2s; 
+        /* Professional Header Toggle Buttons (Inside Sidebar/Insight) */
+        .workspace-toggle-btn {
+            background: transparent; border: 1px solid transparent;
+            color: var(--text-dim); cursor: pointer; border-radius: 6px; padding: 6px;
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+            flex-shrink: 0;
         }
-        .toggle-btn:hover { 
-            background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(37, 99, 235,0.4); 
-            box-shadow: 0 0 12px rgba(37, 99, 235,0.2); 
+        .workspace-toggle-btn:hover {
+            background: rgba(255,255,255,0.06); color: #fff; border-color: var(--glass-border);
         }
 
-        /* App Floating Toggles */
+        /* App Floating Toggles (Professional Linear-style) */
         .app-floating-toggle {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: 32px; height: 32px; border-radius: 50%; padding: 0;
-            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
-            z-index: 100; border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1), right 0.25s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s, border-color 0.2s;
+            position: absolute; top: 12px;
+            width: 28px; height: 28px; border-radius: 7px; padding: 0;
+            background: #1e293b; /* Dark slate like Linear */
+            z-index: 100; border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: none; /* Hidden by default when expanded */
+            align-items: center; justify-content: center; color: #cbd5e1;
         }
-        .app-left-toggle { left: 264px; }
-        .app-left-toggle.collapsed { left: 56px; }
-        .app-left-toggle i { transition: transform 0.25s; }
-        .app-left-toggle.collapsed i { transform: rotate(180deg); }
-
-        .app-right-toggle { right: 284px; }
-        .app-right-toggle.collapsed { right: 56px; }
-        .app-right-toggle i { transition: transform 0.25s; }
-        .app-right-toggle.collapsed i { transform: rotate(-180deg); }
+        .app-floating-toggle.collapsed { display: flex; }
+        .app-floating-toggle:hover {
+            background: #334155; border-color: rgba(255,255,255,0.2); transform: scale(1.05); color: #fff;
+        }
+        
+        .app-left-toggle { left: 8px; transform: translateX(52px); }
+        .app-right-toggle { right: 8px; transform: translateX(-52px); }
         
         /* Sidebar Collapsed */
         .sidebar.collapsed { width: 72px; padding: 24px 8px; align-items: center; }
@@ -718,12 +719,15 @@
         <!-- ==== LEFT SIDEBAR (Project View) ==== -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-header-content" style="display:flex; align-items:center; gap:12px;">
+                <div class="sidebar-header-content" style="display:flex; align-items:center; gap:12px; width:100%;">
                     <div class="logo-icon" title="Exmora"><i data-lucide="sparkles" size="18"></i></div>
-                    <div class="logo-text-group" style="display:flex; flex-direction:column;">
+                    <div class="logo-text-group" style="display:flex; flex-direction:column; flex:1;">
                         <span class="logo-text">Exmora</span>
                         <div style="font-size:0.6rem; color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">v1.3.0 Live</div>
                     </div>
+                    <button class="workspace-toggle-btn sidebar-internal-toggle" title="Collapse Sidebar (⌘B)">
+                        <i data-lucide="panel-left" size="16"></i>
+                    </button>
                 </div>
             </div>
             
@@ -754,8 +758,8 @@
             </div>
         </aside>
 
-        <button id="sidebar-collapse-btn" class="toggle-btn app-floating-toggle app-left-toggle" title="Collapse Sidebar (⌘B)">
-            <i data-lucide="chevron-left" size="16"></i>
+        <button id="sidebar-collapse-btn" class="app-floating-toggle app-left-toggle collapsed" title="Expand Sidebar (⌘B)">
+            <i data-lucide="panel-left-open" size="16"></i>
         </button>
 
         <!-- ==== MAIN CHAT WORKSPACE ==== -->
@@ -853,16 +857,19 @@
         </main>
         
         <!-- ==== RIGHT INSIGHT PANEL ==== -->
-        <button id="insight-collapse-btn" class="toggle-btn app-floating-toggle app-right-toggle collapsed" title="Expand Panel (⌘⇧R)">
-            <i data-lucide="chevron-right" size="16"></i>
+        <button id="insight-collapse-btn" class="app-floating-toggle app-right-toggle collapsed" title="Expand Panel (⌘⇧R)">
+            <i data-lucide="panel-right-open" size="16"></i>
         </button>
 
         <aside class="insight-panel hidden-mobile collapsed" id="insight-panel">
-            <div class="insight-header" style="justify-content: center;">
+            <div class="insight-header" style="justify-content: space-between; padding: 0 16px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                    <i data-lucide="bookmark" size="18" style="color: #2563EB;"></i>
+                    <i data-lucide="bookmark" size="18" style="color: var(--primary);"></i>
                     <span class="insight-title">Bookmarks</span>
                 </div>
+                <button class="workspace-toggle-btn insight-internal-toggle" title="Collapse Panel (⌘⇧R)">
+                    <i data-lucide="panel-right" size="16"></i>
+                </button>
             </div>
             <div class="insight-content">
 
@@ -1058,21 +1065,29 @@
         // Workspace Collapse Logic
         const sidebarEl = document.getElementById('sidebar');
         const sidebarToggleBtn = document.getElementById('sidebar-collapse-btn');
-        sidebarToggleBtn.addEventListener('click', () => {
+        const sidebarInternalToggle = document.querySelector('.sidebar-internal-toggle');
+        
+        function toggleLeft() {
             sidebarEl.classList.toggle('collapsed');
             sidebarToggleBtn.classList.toggle('collapsed');
             const isColl = sidebarEl.classList.contains('collapsed');
             sidebarToggleBtn.title = isColl ? "Expand Sidebar" : "Collapse Sidebar";
-        });
+        }
+        sidebarToggleBtn.addEventListener('click', toggleLeft);
+        if(sidebarInternalToggle) sidebarInternalToggle.addEventListener('click', toggleLeft);
 
         const insightPanel = document.getElementById('insight-panel');
         const insightToggleBtn = document.getElementById('insight-collapse-btn');
-        insightToggleBtn.addEventListener('click', () => {
+        const insightInternalToggle = document.querySelector('.insight-internal-toggle');
+        
+        function toggleRight() {
             insightPanel.classList.toggle('collapsed');
             insightToggleBtn.classList.toggle('collapsed');
             const isColl = insightPanel.classList.contains('collapsed');
             insightToggleBtn.title = isColl ? "Expand Panel" : "Collapse Panel";
-        });
+        }
+        insightToggleBtn.addEventListener('click', toggleRight);
+        if(insightInternalToggle) insightInternalToggle.addEventListener('click', toggleRight);
     </script>
     <script src="./frontend/scripts/main-v3.js?v=301"></script>
 </body>
