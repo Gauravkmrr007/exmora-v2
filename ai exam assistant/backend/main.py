@@ -249,7 +249,7 @@ async def ask_question(
         session = await sessions_col.find_one({"_id": ObjectId(session_id), "userId": user_id})
 
     if not session:
-        return {"error": "No active session found. Please upload a PDF first."}
+        raise HTTPException(status_code=404, detail="No active session found. Please upload a PDF first.")
 
     doc_context = ""
     
@@ -313,6 +313,10 @@ If the answer isn't in the documents, say so.
             raise HTTPException(status_code=502, detail="AI provider returned an empty response")
             
         answer = data["choices"][0]["message"]["content"]
+        print(f"DEBUG: AI Answer received (length: {len(answer)})")
+        
+        if not answer.strip():
+            raise HTTPException(status_code=502, detail="AI provider returned an empty string")
     except HTTPException:
         raise
     except Exception as e:
