@@ -285,9 +285,8 @@ If the answer isn't in the documents, say so.
         "X-Title": "Exmora"
     }
 
-    # Final payload for OpenRouter
     payload = {
-        "model": "google/gemini-2.0-flash-exp:free", # Faster and free
+        "model": "openai/gpt-3.5-turbo", 
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
