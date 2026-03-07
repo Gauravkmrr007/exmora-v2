@@ -573,6 +573,10 @@ async function handleAsk() {
       const errorText = data.error || data.detail || JSON.stringify(data) || "Server error";
       addMessage("system", `Error (${res.status}): ${errorText}`);
       toggleInputLock(false);
+    } else if (!data.answer) {
+      console.warn("Server returned success but no answer:", data);
+      addMessage("system", "⚠️ **Technical Error**: The AI server didn't provide an answer. Please try slightly rephrasing your question.");
+      toggleInputLock(false);
     } else {
       currentSessionId = data.session_id; 
       const msgDiv = createMessageDiv("ai");
@@ -585,7 +589,8 @@ async function handleAsk() {
     removeMessage(loaderId);
     if (err.name !== "AbortError") {
       const msg = err.message || "Unknown error";
-      addMessage("system", `⚠️ **Network error**: ${msg}. Please check your connection and the server status.`);
+      console.error("Critical handleAsk error:", err);
+      addMessage("system", `⚠️ **Network error**: ${msg}. This usually happens if the AI server is sleeping or under heavy load. Please refresh and try one more time.`);
     }
     toggleInputLock(false);
   }
@@ -878,6 +883,10 @@ function typeWriter(containerElement, text, callback) {
   const speed = 5;
   let buffer = "";
   function step() {
+    if (!text) {
+        if (onComplete) onComplete();
+        return;
+    }
     if (i < text.length) {
       buffer += text.charAt(i);
       const cleanText = buffer.replace(/\[QUIZ_JSON\][\s\S]*$/, "");

@@ -160,7 +160,7 @@ async def get_session(session_id: str, user_id: str = Depends(verify_token)):
 @app.post("/upload")
 async def upload_pdf(files: List[UploadFile] = File(...), user_id: str = Depends(verify_token)):
     if len(files) > 3:
-        return {"error": "Maximum 3 PDF files allowed."}
+        raise HTTPException(status_code=400, detail="Maximum 3 PDF files allowed.")
 
     documents = []
     total_text_length = 0
@@ -169,7 +169,7 @@ async def upload_pdf(files: List[UploadFile] = File(...), user_id: str = Depends
     for file in files:
         file_start = time.time()
         if not file.filename.lower().endswith(".pdf"):
-            return {"error": f"File {file.filename} is not a PDF. Only PDF files are supported."}
+            raise HTTPException(status_code=400, detail=f"File {file.filename} is not a PDF.")
         
         # 1. Save to temporary file instead of reading all into RAM
         # This is key for Render's 512MB limit
@@ -305,13 +305,19 @@ If the answer isn't in the documents, say so.
             
         if response.status_code != 200:
             print(f"AI ERROR: {response.status_code} - {response.text}")
-            return {"error": "AI API error", "details": response.text}
+            raise HTTPException(status_code=502, detail=f"AI provider error: {response.text}")
 
         data = response.json()
+        if "choices" not in data or not data["choices"]:
+            print(f"AI EMPTY RESPONSE: {data}")
+            raise HTTPException(status_code=502, detail="AI provider returned an empty response")
+            
         answer = data["choices"][0]["message"]["content"]
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"AI FETCH EXCEPTION: {e}")
-        return {"error": "Failed to connect to AI provider"}
+        raise HTTPException(status_code=500, detail="Failed to connect to AI provider")
 
     # Save to history
     await sessions_col.update_one(
