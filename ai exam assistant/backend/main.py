@@ -291,7 +291,8 @@ If the answer isn't in the documents, say so.
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
         ],
-        "temperature": 0.3
+        "temperature": 0.3,
+        "max_tokens": 1000
     }
 
     try:
@@ -308,6 +309,13 @@ If the answer isn't in the documents, say so.
             raise HTTPException(status_code=502, detail=f"AI provider error: {response.text}")
 
         data = response.json()
+        
+        # Check for error in JSON body even if status is 200
+        if "error" in data:
+            err_msg = data["error"].get("message", "Unknown provider error")
+            print(f"AI BODY ERROR: {err_msg}")
+            raise HTTPException(status_code=502, detail=f"AI provider error: {err_msg}")
+
         if "choices" not in data or not data["choices"]:
             print(f"AI EMPTY RESPONSE: {data}")
             raise HTTPException(status_code=502, detail="AI provider returned an empty response")
