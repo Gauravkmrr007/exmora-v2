@@ -9,6 +9,7 @@ python-jose[cryptography]
 motor
 pymongo
 boto3
+httpx
 
 # cd backend
 # .\venv\Scripts\Activate.ps1

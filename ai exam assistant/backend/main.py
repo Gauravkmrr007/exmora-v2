@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from typing import Optional, List
 import os
 import fitz
-import requests
+import httpx
 import jwt
 from jwt.exceptions import InvalidTokenError
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -46,15 +46,8 @@ app = FastAPI()
 # cors setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://exmora-ai.netlify.app",
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "http://localhost:5500",
-        "http://127.0.0.1:5500"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -293,7 +286,7 @@ If the answer isn't in the documents, say so.
     }
 
     payload = {
-        "model": "openai/gpt-3.5-turbo",
+        "model": "google/gemini-2.0-flash-exp:free", # Faster and free
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": question}
@@ -301,18 +294,24 @@ If the answer isn't in the documents, say so.
         "temperature": 0.3
     }
 
-    response = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
-        headers=headers,
-        json=payload,
-        timeout=60
-    )
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json=payload,
+                timeout=60.0
+            )
+            
+        if response.status_code != 200:
+            print(f"AI ERROR: {response.status_code} - {response.text}")
+            return {"error": "AI API error", "details": response.text}
 
-    if response.status_code != 200:
-        return {"error": "AI API error", "details": response.text}
-
-    data = response.json()
-    answer = data["choices"][0]["message"]["content"]
+        data = response.json()
+        answer = data["choices"][0]["message"]["content"]
+    except Exception as e:
+        print(f"AI FETCH EXCEPTION: {e}")
+        return {"error": "Failed to connect to AI provider"}
 
     # Save to history
     await sessions_col.update_one(
