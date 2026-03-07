@@ -285,6 +285,7 @@ If the answer isn't in the documents, say so.
         "X-Title": "Exmora"
     }
 
+    # Final payload for OpenRouter
     payload = {
         "model": "google/gemini-2.0-flash-exp:free", # Faster and free
         "messages": [
