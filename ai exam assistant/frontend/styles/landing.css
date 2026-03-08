@@ -992,14 +992,28 @@ body {
   .feature-grid {
     grid-template-columns: 1fr;
   }
+  .hero-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+  }
   .hero-title {
-    font-size: 3rem;
+    font-size: 2.25rem;
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-bottom: 24px;
+  }
+  .btn-lg {
+    padding: 10px 20px;
+    font-size: 0.9rem;
   }
   .cta-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   .cta-content {
-    padding: 40px 20px;
+    padding: 32px 16px;
   }
   .glass-nav {
     padding: 0 20px;

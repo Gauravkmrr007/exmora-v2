@@ -32,9 +32,9 @@
 
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.4);
-            --accent: #a855f7;
+            --primary: #2563EB;
+            --primary-glow: rgba(37, 99, 235, 0.4);
+            --accent: #60A5FA;
             --bg-dark: #06080f;
             --bg-surface: #0b0f1a;
             --glass-card: rgba(15, 23, 42, 0.6);
@@ -71,8 +71,8 @@
         .workspace-bg {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             z-index: 0; pointer-events: none;
-            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 45%),
-                        radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.08), transparent 45%);
+            background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 45%),
+                        radial-gradient(circle at bottom left, rgba(96, 165, 250, 0.08), transparent 45%);
         }
         .workspace-noise {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -661,15 +661,33 @@
             #menu-toggle { display: flex !important; }
 
             /* Chat feed - compact mobile padding */
-            .chat-feed { padding: 12px 12px 8px; }
+            .chat-feed { padding: 64px 12px 8px; }
+
+            /* Welcome Screen / Empty State Fitting */
+            .welcome-text h1 { font-size: 1.75rem; margin-bottom: 8px; }
+            .welcome-text p { font-size: 0.9rem; margin-bottom: 24px; padding: 0 10px; }
+            .glow-icon-container { width: 60px; height: 60px; margin-bottom: 16px; }
+            .glow-icon-container i { width: 24px; height: 24px; }
+
+            /* Compact Upload Zone */
+            .drop-upload-zone { padding: 20px 16px; margin-bottom: 20px; }
+            .drop-icon { margin-bottom: 8px; }
+            .drop-icon i { width: 24px; height: 24px; }
+            .drop-title { font-size: 0.95rem; }
+            .drop-subtitle { font-size: 0.8rem; }
+
+            /* Smaller chips */
+            .empty-suggestions { gap: 8px; }
+            .suggestion-chip { padding: 8px 12px; font-size: 0.8rem; border-radius: 16px; }
 
             /* Input area - full width, safe insets */
             .input-area { padding: 8px 12px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+            .composer-input { font-size: 0.95rem; }
 
             /* Bubbles go full width on mobile */
             .message { max-width: 100%; margin-bottom: 12px; }
-            .message.user .msg-content { max-width: 88%; padding: 10px 14px; }
-            .message.bot .msg-content { max-width: 100%; padding: 12px 14px; }
+            .message.user .msg-content { max-width: 90%; padding: 10px 14px; font-size: 0.9rem; }
+            .message.bot .msg-content { max-width: 100%; padding: 12px 14px; font-size: 0.9rem; }
 
             /* Tighter header label on small screens */
             .header-title { font-size: 0.8rem; }
