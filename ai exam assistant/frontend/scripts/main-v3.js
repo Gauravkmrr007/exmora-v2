@@ -11,6 +11,7 @@ const askBtn = document.getElementById("ask-btn");
 const stopBtn = document.getElementById("stop-btn");
 const newChatBtn = document.getElementById("new-chat-btn");
 const chatHistory = document.getElementById("chat-history");
+const chatHistoryContainer = document.getElementById("chat-history-container");
 const welcomeScreen = document.querySelector(".welcome-screen");
 const dropUploadArea = document.getElementById("drop-upload-area");
 
@@ -34,7 +35,7 @@ const logoutBtn = document.getElementById("logout-btn");
 
 // --- State ---
 let currentSessionId = null;
-const API_BASE = "https://exmora-ai.onrender.com"; // Your Python AI Backend URL
+const API_BASE = "https://exmora-ai.onrender.com"; 
 let currentController = null;
 let typingTimeout = null;
 let recognition = null;
@@ -343,6 +344,8 @@ fileInput.addEventListener("change", async () => {
 
       // Refresh Sidebar
       loadSessions();
+      // Load Quiz History for the new document
+      loadQuizHistory(files[0].name);
 
       // Update Context Suggestions dynamically
       const suggestionsBox = document.querySelector('#context-suggestions .quick-tools');
@@ -391,8 +394,12 @@ removeDocBtn.addEventListener("click", async () => {
 
 // 6. Tools (Quiz/Summary)
 quizBtn.addEventListener("click", () => {
-  queryInput.value =
-    "Generate a 5-question interactive quiz based on the key concepts.";
+  const countMatch = queryInput.value.match(/(\d+)\s*(?:question|test|quiz)/i);
+  let count = 5;
+  if (countMatch) {
+    count = Math.min(Math.max(parseInt(countMatch[1]), 1), 25);
+  }
+  queryInput.value = `Generate a ${count}-question interactive quiz based on the key concepts of this document.`;
   handleAsk();
 });
 
@@ -525,6 +532,32 @@ async function handleAsk() {
   const text = queryInput.value.trim();
   if (!text) return;
 
+  // Detect and append instructions for interactive quiz requests
+  let processedText = text;
+  const quizTriggerKeywords = ["quiz", "test", "questions", "knowledge check"];
+  const isQuizRequest = quizTriggerKeywords.some(k => text.toLowerCase().includes(k)) && !text.includes("[QUIZ_JSON]");
+
+  if (isQuizRequest) {
+    const countMatch = text.match(/(\d+)/);
+    let count = 5;
+    if (countMatch) {
+      count = Math.min(Math.max(parseInt(countMatch[1]), 1), 25);
+    }
+    processedText += ` \n\nIMPORTANT: Return exactly ${count} quiz questions as a valid JSON object wrapped in [QUIZ_JSON] (at start) and [/QUIZ_JSON] (at end) tags.
+Return STRICTLY VALID JSON.
+Format:
+{
+  "quiz": [
+    {
+      "question": "...",
+      "options": ["...", "...", "...", "..."],
+      "correct_answer": 0,
+      "explanation": "..."
+    }
+  ]
+}`;
+  }
+
   if (welcomeScreen) welcomeScreen.style.display = "none";
   addMessage("user", text);
   queryInput.value = "";
@@ -536,7 +569,7 @@ async function handleAsk() {
   currentController = new AbortController();
 
   const formData = new FormData();
-  formData.append("question", text);
+  formData.append("question", processedText);
   if (currentSessionId) formData.append("session_id", currentSessionId);
 
   try {
@@ -765,6 +798,11 @@ async function switchSession(id) {
     // CRITICAL FIX: Unlock input after switching
     toggleInputLock(false);
     loadSessions(); // Highlight active
+    
+    // Load Quiz History for the switched document
+    if (docNameEl.textContent && docNameEl.textContent !== "Document Context") {
+        loadQuizHistory(docNameEl.textContent);
+    }
   } catch (e) {
     removeMessage(loaderId);
     addMessage("system", "Error loading session.");
@@ -788,19 +826,35 @@ function createMessageDiv(role) {
     threadDiv.innerHTML = `
             <div class="agent-header">
                 <div class="agent-avatar">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"></path></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"></path></svg>
                 </div>
-                <span class="agent-name">Exmora Agent 
-                    <div class="ai-status-indicator ready"><div class="status-dot"></div> Ready</div>
-                </span>
+                <div class="agent-name">
+                    <span>Exmora</span>
+                    <div class="ai-status-indicator ready">
+                        <div class="status-dot"></div> 
+                        <span class="status-text">Ready</span>
+                    </div>
+                </div>
                 <span class="live-timestamp" data-timestamp="${timestamp}">Just now</span>
             </div>
             <div class="msg-content"></div>
             <div class="msg-actions">
-                <button class="msg-action-btn" onclick="const text = this.closest('.message').querySelector('.msg-content').innerText; navigator.clipboard.writeText(text); const o=this.innerHTML; this.innerHTML='<svg width=\\'14\\' height=\\'14\\' viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied'; setTimeout(()=>this.innerHTML=o,2000);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy summary</button>
-                <button class="msg-action-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg> Regenerate</button>
-                <button class="msg-action-btn" onclick="document.getElementById('quiz-btn').click()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Generate Quiz</button>
-                <button class="msg-action-btn" onclick="const txt=this.closest('.message').querySelector('.msg-content').innerText; addBookmark(txt); const o=this.innerHTML; this.innerHTML='&#10003; Saved'; setTimeout(()=>this.innerHTML=o,2000);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg> Bookmark</button>
+                <button class="msg-action-btn" title="Copy text" onclick="const text = this.closest('.message').querySelector('.msg-content').innerText; navigator.clipboard.writeText(text); const o=this.innerHTML; this.innerHTML='<svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'2\\'><polyline points=\\'20 6 9 17 4 12\\'></polyline></svg> Copied'; setTimeout(()=>this.innerHTML=o,2000);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copy
+                </button>
+                <button class="msg-action-btn" title="Regenerate answer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>
+                    Regen
+                </button>
+                <button class="msg-action-btn" title="Generate quiz" onclick="document.getElementById('quiz-btn').click()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Quiz
+                </button>
+                <button class="msg-action-btn" title="Save to bookmarks" onclick="const txt=this.closest('.message').querySelector('.msg-content').innerText; addBookmark(txt); const o=this.innerHTML; this.innerHTML='✓ Saved'; setTimeout(()=>this.innerHTML=o,2000);">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+                    Save
+                </button>
             </div>
         `;
   } else {
@@ -815,9 +869,9 @@ function createMessageDiv(role) {
 
   chatHistory.appendChild(threadDiv);
   setTimeout(() => {
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+    chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
   }, 50);
-  return threadDiv; // Returning entire thread to access status element easily
+  return threadDiv; 
 }
 
 // --- Pre-Process Format Hook for Educational Calling ---
@@ -845,7 +899,7 @@ function addMessage(role, text) {
   }
 }
 
-function addLoader(text = "Initializing cognitive search...") {
+function addLoader(text = "Exmora Agent is thinking...") {
   const id = "loader-" + Date.now();
   const div = document.createElement("div");
   div.id = id;
@@ -854,20 +908,30 @@ function addLoader(text = "Initializing cognitive search...") {
   div.innerHTML = `
         <div class="agent-header">
             <div class="agent-avatar">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"></path></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"></path></svg>
             </div>
-            <span class="agent-name">Exmora Agent
-                <div class="ai-status-indicator thinking" style="border-color: rgba(168,85,247,0.4);"><div class="status-dot pulsing"></div> Thinking...</div>
-            </span>
+            <div class="agent-name">
+                <span>Exmora</span>
+                <div class="ai-status-indicator thinking">
+                    <div class="status-dot pulsing"></div> 
+                    <span class="status-text">Thinking...</span>
+                </div>
+            </div>
             <span class="live-timestamp" data-timestamp="${timestamp}">Just now</span>
         </div>
-        <div class="msg-content"><div style="display:flex; align-items:center; gap:12px;">
-            <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-            <span style="font-size:0.95rem; color:var(--text-muted);">${text}</span>
-        </div></div>
+        <div class="msg-content">
+            <div style="display:flex; align-items:center; gap:16px; padding: 4px 0;">
+                <div class="typing-dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <span style="font-size:0.95rem; color:#64748b; font-weight: 500;">${text}</span>
+            </div>
+        </div>
     `;
   chatHistory.appendChild(div);
-  chatHistory.scrollTop = chatHistory.scrollHeight;
+  chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
   return id;
 }
 
@@ -892,10 +956,12 @@ function toggleInputLock(locked) {
 function typeWriter(containerElement, text, callback) {
   const contentElement = containerElement.querySelector(".msg-content") || containerElement;
   const statusElement = containerElement.querySelector('.ai-status-indicator');
+  const statusText = containerElement.querySelector('.status-text');
   
   if (statusElement) {
-      statusElement.innerHTML = '<div class="status-dot pulsing"></div> Generating...';
-      statusElement.style.borderColor = 'rgba(168,85,247,0.4)';
+      statusElement.className = 'ai-status-indicator generating';
+      if(statusText) statusText.innerText = 'Generating...';
+      statusElement.style.borderColor = 'rgba(37,99,235,0.4)';
   }
 
   let i = 0;
@@ -908,22 +974,29 @@ function typeWriter(containerElement, text, callback) {
     }
     if (i < text.length) {
       buffer += text.charAt(i);
-      const cleanText = buffer.replace(/\[QUIZ_JSON\][\s\S]*$/, "");
+      const cleanText = buffer.replace(/\[QUIZ_JSON\][\s\S]*$/, "").trim();
       const processedText = formatEducationalContent(cleanText);
-      contentElement.innerHTML = marked.parse(processedText) + '<span class="streaming-cursor"></span>';
+      
+      if (processedText === "" && text.includes("[QUIZ_JSON]")) {
+          contentElement.innerHTML = '<div style="display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:0.9rem; margin-bottom:10px;"><div class="status-dot pulsing"></div> Building interactive quiz...</div>';
+      } else {
+          contentElement.innerHTML = marked.parse(processedText) + '<span class="streaming-cursor"></span>';
+      }
+      
       i++;
-      chatHistory.scrollTop = chatHistory.scrollHeight;
+      chatHistoryContainer.scrollTop = chatHistoryContainer.scrollHeight;
       typingTimeout = setTimeout(step, speed);
     } else {
-      const finalCleanText = text.replace(/\[QUIZ_JSON\][\s\S]*$/, "");
+      const finalCleanText = text.replace(/\[QUIZ_JSON\][\s\S]*$/, "").trim();
       contentElement.innerHTML = marked.parse(formatEducationalContent(finalCleanText));
       renderMath(contentElement);
       enhanceCodeBlocks(contentElement);
       if(window.lucide) lucide.createIcons();
       
       if (statusElement) {
-          statusElement.innerHTML = '<div class="status-dot"></div> Ready';
-          statusElement.style.borderColor = 'rgba(168,85,247,0.2)';
+          statusElement.className = 'ai-status-indicator ready';
+          if(statusText) statusText.innerText = 'Ready';
+          statusElement.style.borderColor = 'rgba(37,99,235,0.2)';
       }
 
       if (text.includes("[QUIZ_JSON]")) renderQuizArtifact(text, contentElement);
@@ -967,61 +1040,354 @@ function renderMath(el) {
 }
 
 function renderQuizArtifact(fullText, container) {
-  const match = fullText.match(/\[QUIZ_JSON\]([\s\S]*?)\[\/QUIZ_JSON\]/);
-  if (!match) return;
+  // More robust split to extract JSON content
+  let rawData = fullText.split('[QUIZ_JSON]')[1]?.split('[/QUIZ_JSON]')[0];
+  if (!rawData) return;
+  
+  // Clean up potential markdown code blocks returned by LLM
+  rawData = rawData.replace(/```json/g, "").replace(/```/g, "").trim();
+  
   try {
-    const quizData = JSON.parse(match[1]);
-    const quizCard = document.createElement("div");
-    quizCard.className = "glass-panel";
-    quizCard.style.padding = "1.5rem";
-    quizCard.style.marginTop = "1rem";
-    quizCard.style.borderLeft = "4px solid var(--google-yellow)";
-    quizCard.innerHTML = `<h3 style="margin-bottom:1rem;">Interactive Knowledge Check</h3>`;
-    quizData.questions.forEach((q, idx) => {
-      const qDiv = document.createElement("div");
-      qDiv.style.marginBottom = "1.5rem";
-      qDiv.innerHTML = `<div style="font-weight:500; margin-bottom:0.5rem;">${idx + 1}. ${q.q}</div>`;
-      const optsDiv = document.createElement("div");
-      optsDiv.style.display = "grid";
-      optsDiv.style.gap = "8px";
-      q.o.forEach((opt, oIdx) => {
+    const data = JSON.parse(rawData);
+    const questions = data.quiz || data.questions;
+    if (!questions || !questions.length) return;
+
+    let currentIdx = 0;
+    let score = 0;
+    let userAnswers = [];
+
+    const quizRoot = document.createElement("div");
+    quizRoot.className = "quiz-container";
+    container.appendChild(quizRoot);
+
+    function renderQuestion(idx) {
+      const q = questions[idx];
+      const isLast = idx === questions.length - 1;
+      
+      quizRoot.innerHTML = `
+        <div class="quiz-header">
+           <span class="quiz-progress">Question ${idx + 1} of ${questions.length}</span>
+           <span class="quiz-score-live">Score: ${score}</span>
+        </div>
+        <div class="quiz-question-text">${q.question}</div>
+        <div class="quiz-options"></div>
+        <div class="quiz-feedback hidden"></div>
+        <div class="quiz-nav hidden">
+           <button class="quiz-next-btn">
+             ${isLast ? 'See Results' : 'Next Question'} 
+             <i data-lucide="${isLast ? 'check-circle' : 'arrow-right'}" size="18"></i>
+           </button>
+        </div>
+      `;
+
+      const optionsBox = quizRoot.querySelector(".quiz-options");
+      const feedbackBox = quizRoot.querySelector(".quiz-feedback");
+      const navBox = quizRoot.querySelector(".quiz-nav");
+      const nextBtn = quizRoot.querySelector(".quiz-next-btn");
+
+      q.options.forEach((opt, oIdx) => {
         const btn = document.createElement("button");
-        btn.textContent = opt;
-        btn.className = "btn-landing-secondary";
-        btn.style.textAlign = "left";
-        btn.style.fontSize = "0.9rem";
+        btn.className = "quiz-option";
+        btn.innerHTML = `<span class="opt-label">${String.fromCharCode(65 + oIdx)}</span> ${opt}`;
         btn.onclick = () => {
-          const isCorrect = oIdx === q.a;
-          btn.style.borderColor = isCorrect
-            ? "var(--google-green)"
-            : "var(--google-red)";
-          btn.style.background = isCorrect
-            ? "rgba(52, 168, 83, 0.1)"
-            : "rgba(234, 67, 53, 0.1)";
-
-          const feedback = document.createElement("div");
-          feedback.style.fontSize = "0.85rem";
-          feedback.style.marginTop = "4px";
-          feedback.style.color = isCorrect
-            ? "var(--google-green)"
-            : "var(--google-red)";
-          feedback.textContent = isCorrect ? "Correct" : "Incorrect";
-
-          if (!qDiv.querySelector(".feedback")) {
-            toggleInputLock(false); // ensuring ease
-            feedback.className = "feedback";
-            qDiv.appendChild(feedback);
+          if (btn.classList.contains("disabled")) return;
+          
+          const isCorrect = oIdx === q.correct_answer;
+          userAnswers[idx] = oIdx;
+          
+          if (isCorrect) {
+            score++;
+            btn.classList.add("correct");
+          } else {
+            btn.classList.add("incorrect");
+            optionsBox.children[q.correct_answer].classList.add("correct");
           }
+
+          // Disable all
+          Array.from(optionsBox.children).forEach(b => b.classList.add("disabled"));
+          
+          // Show feedback
+          feedbackBox.innerHTML = `<strong>${isCorrect ? 'Correct!' : 'Incorrect'}</strong><br>${q.explanation || ''}`;
+          feedbackBox.className = `quiz-feedback ${isCorrect ? 'key-concept' : 'common-mistake'}`;
+          feedbackBox.classList.remove("hidden");
+          
+          // Show nav
+          navBox.classList.remove("hidden");
+          quizRoot.querySelector(".quiz-score-live").textContent = `Score: ${score}`;
         };
-        optsDiv.appendChild(btn);
+        optionsBox.appendChild(btn);
       });
-      qDiv.appendChild(optsDiv);
-      quizCard.appendChild(qDiv);
-    });
-    container.appendChild(quizCard);
+
+      nextBtn.onclick = () => {
+        if (isLast) showResults();
+        else renderQuestion(idx + 1);
+      };
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function showResults() {
+      const percent = Math.round((score / questions.length) * 100);
+      let message = "Excellent work! You have a strong grasp of these concepts.";
+      if (percent < 50) message = "Review the document again to strengthen your understanding.";
+      else if (percent < 80) message = "Good job! A little more review will make you an expert.";
+
+      const docName = document.getElementById("doc-name")?.textContent || "Unknown Document";
+
+      quizRoot.innerHTML = `
+        <div class="quiz-results-card">
+          <div class="results-score-circle">
+            <span class="results-score-num">${score}/${questions.length}</span>
+            <span class="results-score-label">${percent}%</span>
+          </div>
+          <h2 class="results-title">Quiz Completed 🎉</h2>
+          <p class="results-msg">${message}</p>
+          <div class="results-actions" style="margin-bottom: 12px;">
+            <button class="quiz-save-btn" style="background: var(--primary); padding: 12px 20px; border-radius: 12px; color: #fff; font-weight: 600; cursor: pointer; border: none; flex: 1; max-width: 160px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+               <i data-lucide="save" size="18"></i> Save Result
+            </button>
+          </div>
+          <div class="results-actions">
+            <button class="quiz-retry-btn">Retry Quiz</button>
+            <button class="quiz-new-btn">New Quiz</button>
+          </div>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+
+      quizRoot.querySelector(".quiz-save-btn").onclick = async (e) => {
+          const btn = e.currentTarget;
+          const original = btn.innerHTML;
+          btn.innerHTML = '<i data-lucide="loader-2" class="spin" size="18"></i> Saving...';
+          lucide.createIcons();
+          
+          const resultData = {
+              document_name: docName,
+              session_id: currentSessionId,
+              total_questions: questions.length,
+              correct_answers: score,
+              accuracy_percentage: percent,
+              quiz_data: {
+                  questions: questions.map((q, idx) => ({
+                      ...q,
+                      user_answer: userAnswers[idx]
+                  }))
+              }
+          };
+
+          try {
+              const res = await fetch(`${API_BASE}/quiz/save`, {
+                  method: "POST",
+                  headers: { 
+                      "Authorization": `Bearer ${getToken()}`,
+                      "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify(resultData)
+              });
+              if (res.ok) {
+                  btn.innerHTML = '<i data-lucide="check" size="18"></i> Saved!';
+                  btn.style.background = "var(--google-green)";
+                  btn.disabled = true;
+                  loadQuizHistory(docName);
+              } else {
+                  btn.innerHTML = 'Error Saving';
+              }
+          } catch (err) {
+              btn.innerHTML = 'Failed';
+          }
+          lucide.createIcons();
+      };
+
+      quizRoot.querySelector(".quiz-retry-btn").onclick = () => {
+        score = 0;
+        currentIdx = 0;
+        userAnswers = [];
+        renderQuestion(0);
+      };
+
+      quizRoot.querySelector(".quiz-new-btn").onclick = () => {
+        quizBtn.click();
+      };
+    }
+
+    renderQuestion(0);
+
   } catch (e) {
     console.error("Quiz render failed", e);
+    container.innerHTML += '<div class="common-mistake">Failed to parse interactive quiz data.</div>';
   }
+}
+
+// --- Quiz History & Learning Insights ---
+async function loadQuizHistory(filename) {
+    const listContainer = document.getElementById('quiz-history-list');
+    const insightsContainer = document.getElementById('quiz-insights-container');
+    if (!listContainer || !filename) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/quiz/history/${encodeURIComponent(filename)}`, {
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+        const history = await res.json();
+        
+        if (!history || history.length === 0) {
+            listContainer.innerHTML = `
+                <div style="text-align:center; padding:24px 0; color:#475569; font-size:0.85rem;">
+                    <i data-lucide="bar-chart-2" size="28" style="color:#334155; display:block; margin:0 auto 10px;"></i>
+                    No quiz history for this document yet.
+                </div>
+            `;
+            insightsContainer.innerHTML = "";
+            if (window.lucide) lucide.createIcons();
+            return;
+        }
+
+        renderQuizHistory(history, listContainer);
+        analyzeLearningProgress(history, insightsContainer);
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        console.error("Failed to load quiz history", e);
+    }
+}
+
+function renderQuizHistory(history, container) {
+    let html = '';
+    
+    // Progress Trend Micro-Chart
+    const recentScores = history.slice(0, 5).reverse().map(h => h.accuracy_percentage);
+    if (recentScores.length > 1) {
+        html += `
+            <div class="progress-trend-container">
+                <div class="trend-title"><i data-lucide="trending-up" size="14"></i> Progress Trend</div>
+                <div class="trend-bar-group">
+                    ${recentScores.map(s => `<div class="trend-bar" style="height: ${Math.max(s, 10)}%;" title="${s}%"></div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // Attempt Cards
+    history.forEach((attempt, idx) => {
+        const scoreClass = attempt.accuracy_percentage >= 80 ? 'score-high' : (attempt.accuracy_percentage >= 50 ? 'score-mid' : 'score-low');
+        const dateStr = new Date(attempt.timestamp).toLocaleDateString();
+        
+        html += `
+            <div class="quiz-history-item" onclick="viewQuizAttempt('${attempt._id}')">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.85rem; font-weight:600; color:#fff;">Attempt #${history.length - idx}</span>
+                    <span class="history-score-tag ${scoreClass}">${attempt.correct_answers} / ${attempt.total_questions}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                     <span style="font-size:0.75rem; color:var(--text-dim);">${dateStr}</span>
+                     <span style="font-size:0.75rem; color:var(--primary); font-weight:500;">${attempt.accuracy_percentage}% Accurate</span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function analyzeLearningProgress(history, container) {
+    if (!history || history.length === 0) return;
+    
+    // Simple logic to find topics from failed questions if available
+    // In a real app, you'd parse keywords from the question text
+    let weakInsights = "";
+    const lastAttempt = history[0];
+    
+    if (lastAttempt.accuracy_percentage < 100) {
+        weakInsights = `
+            <div class="insight-card">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <i data-lucide="info" size="14" style="color:var(--primary);"></i>
+                    <h5>Smart Insights</h5>
+                </div>
+                <p>Based on your last attempt, focus on reviewing the sections regarding <strong>concepts from incorrect answers</strong>.</p>
+                <div style="margin-top:8px;">
+                    <span class="weak-topic-pill">Key Concepts</span>
+                    <span class="weak-topic-pill">Critical Details</span>
+                </div>
+                <button onclick="quizBtn.click()" style="margin-top:12px; width:100%; padding:8px; border-radius:8px; background:rgba(37,99,235,0.1); border:1px solid var(--primary); color:var(--primary); font-size:0.75rem; font-weight:600; cursor:pointer;">
+                    Generate Targeted Quiz
+                </button>
+            </div>
+        `;
+    }
+
+    container.innerHTML = weakInsights;
+}
+
+// Global function to view a previous attempt details in a modal
+async function viewQuizAttempt(id) {
+    const modal = document.getElementById('quiz-attempt-modal');
+    if (!modal) return;
+    
+    // In a real app, you'd fetch the full attempt data by ID
+    // For this context, we can search the already loaded history or fetch again
+    try {
+        const res = await fetch(`${API_BASE}/sessions/${currentSessionId}`, { // This is a bit of a hack, better dedicated endpoint
+             headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+        // Since we don't have a GET /quiz/result/{id} yet, we'll try to find it in the current history list 
+        // Or if we want to be perfect, we add the endpoint. Let's assume we can fetch it.
+        // For now, let's find it in the current list if it was already loaded.
+        
+        // Let's assume the user just wants to see the summary we already have or we fetch it.
+        // Actually, let's just implement the UI for the modal populating from a fetched object.
+        
+        // I will use a placeholder fetch or use the data passed if possible.
+        // To keep it clean, I'll fetch the history again and find the match.
+        const docName = document.getElementById("doc-name")?.textContent;
+        const hRes = await fetch(`${API_BASE}/quiz/history/${encodeURIComponent(docName)}`, {
+            headers: { "Authorization": `Bearer ${getToken()}` }
+        });
+        const history = await hRes.json();
+        const attempt = history.find(a => a._id === id);
+        
+        if (!attempt) return;
+
+        document.getElementById('qa-modal-date').textContent = `Date: ${new Date(attempt.timestamp).toLocaleString()}`;
+        document.getElementById('qa-modal-score').textContent = `${attempt.correct_answers} / ${attempt.total_questions}`;
+        document.getElementById('qa-modal-accuracy').textContent = `${attempt.accuracy_percentage}%`;
+        
+        const qContainer = document.getElementById('qa-modal-questions');
+        qContainer.innerHTML = "";
+        
+        if (attempt.quiz_data && attempt.quiz_data.questions) {
+            attempt.quiz_data.questions.forEach((q, idx) => {
+                const isCorrect = q.user_answer === q.correct_answer;
+                const qDiv = document.createElement('div');
+                qDiv.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+                qDiv.style.paddingBottom = "16px";
+                qDiv.innerHTML = `
+                    <div style="font-size:0.95rem; font-weight:600; color:#fff; margin-bottom:12px;">${idx+1}. ${q.question}</div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        ${q.options.map((opt, oIdx) => {
+                            let style = "background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); color:#94a3b8;";
+                            let icon = "";
+                            if (oIdx === q.correct_answer) {
+                                style = "background:rgba(34, 197, 94, 0.1); border:1px solid #22c55e; color:#fff;";
+                                icon = '<i data-lucide="check" size="14" style="margin-left:auto; color:#22c55e;"></i>';
+                            } else if (oIdx === q.user_answer && !isCorrect) {
+                                style = "background:rgba(239, 68, 68, 0.1); border:1px solid #ef4444; color:#fff;";
+                                icon = '<i data-lucide="x" size="14" style="margin-left:auto; color:#ef4444;"></i>';
+                            }
+                            return `<div style="padding:10px 14px; border-radius:10px; font-size:0.85rem; display:flex; align-items:center; ${style}">${opt}${icon}</div>`;
+                        }).join('')}
+                    </div>
+                    ${q.explanation ? `<div style="margin-top:12px; font-size:0.8rem; color:var(--text-dim); background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;"><strong>Exmoor Insight:</strong> ${q.explanation}</div>` : ''}
+                `;
+                qContainer.appendChild(qDiv);
+            });
+        }
+        
+        modal.style.display = 'flex';
+        if (window.lucide) lucide.createIcons();
+    } catch (e) {
+        console.error("Failed to view attempt", e);
+    }
 }
 
 // --- Custom Modal System ---

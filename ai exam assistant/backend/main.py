@@ -56,6 +56,7 @@ app.add_middleware(
 client = AsyncIOMotorClient(MONGO_URI)
 db = client.get_database()
 sessions_col = db.sessions
+quiz_results_col = db.quiz_results
 
 # S3 Setup
 s3_client = None
@@ -356,3 +357,38 @@ async def delete_session(session_id: str, user_id: str = Depends(verify_token)):
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": "Session deleted"}
+
+# --- QUIZ FEATURES ---
+
+@app.post("/quiz/save")
+async def save_quiz_result(
+    request: Request,
+    user_id: str = Depends(verify_token)
+):
+    try:
+        data = await request.json()
+        result = {
+            "userId": user_id,
+            "document_name": data.get("document_name"),
+            "session_id": data.get("session_id"),
+            "total_questions": data.get("total_questions"),
+            "correct_answers": data.get("correct_answers"),
+            "accuracy_percentage": data.get("accuracy_percentage"),
+            "quiz_data": data.get("quiz_data"),
+            "created_at": datetime.utcnow()
+        }
+        inserted = await quiz_results_col.insert_one(result)
+        return {"id": str(inserted.inserted_id), "status": "saved"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save quiz result: {str(e)}")
+
+@app.get("/quiz/history/{filename}")
+async def get_quiz_history(filename: str, user_id: str = Depends(verify_token)):
+    cursor = quiz_results_col.find({"userId": user_id, "document_name": filename}).sort("created_at", -1)
+    results = await cursor.to_list(length=50)
+    for r in results:
+        r["_id"] = str(r["_id"])
+        # Format date for frontend
+        if "created_at" in r:
+            r["timestamp"] = r["created_at"].isoformat()
+    return results
